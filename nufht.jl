@@ -2,33 +2,34 @@ using LinearAlgebra, SpecialFunctions, FINUFFT, QuadGK, Plots, Plots.Measures, L
 
 Box = NTuple{4, Int64}
 
-function nufht(rs, cs, ws; max_levels=nothing, min_box_dim=100)
+function nufht(nu, rs, cs, ws; max_levels=nothing, min_box_dim=100)
+    # Wimp expansion currently implemented only for nu = 0
+    @assert nu == 0
     @assert issorted(rs) && issorted(ws)
 
-    # Wimp expansion currently implemented only for nu = 0
-    nu = 0
     n = length(ws)
     m = length(rs)
-
-    if min(n, m) < 100
-        # matrix is small enough that direct summation will be faster
-        return nufht_dir(nu, rs, cs, ws)
-    end
 
     # initialize output
     gs = zeros(Float64, n)
 
+    if min(n, m) < 100
+        # matrix is small enough that direct summation will be faster
+        add_dir!(gs, nu, rs, cs, ws)
+        return gs
+    end
+
     z = 25
     boxes = generate_boxes(
         rs, ws, z; 
-        max_levels=max_levels
+        max_levels=max_levels, min_box_dim=min_box_dim
         )
 
-    for (box_set, box_func) in zip(boxes, (nufht_loc, nufht_asy, nufht_dir))
+    for (box_set, add_box!) in zip(boxes, (add_loc!, add_asy!, add_dir!))
         for (i0b, i1b, j0b, j1b) in box_set
-            gs[i0b:i1b] .+= box_func(nu,
-                rs[j0b:j1b], cs[j0b:j1b],
-                ws[i0b:i1b]
+            add_box!(
+                view(gs, i0b:i1b), nu, 
+                rs[j0b:j1b], cs[j0b:j1b], ws[i0b:i1b]
                 )
         end
     end
@@ -105,13 +106,14 @@ function generate_boxes(rs, ws, z; max_levels=nothing, min_box_dim=100)
 end
 
 function split_box(rs, ws, box, z)
-    # (i, j) with wi*r_j >= z, i in is, j in js 
+    # number of equispaced arguments to check
+    num_check = 10
+    sk = round(Int64, (box[2]-box[1]+1)/num_check)
+    # find (i, j) with wi*r_j >= z, i in is, j in js 
     # that maximizes the size of the block A[i:is[end], j:js[end]]
-    is = box[1]:box[2]
-    js = box[3]:box[4]
     i  = argmax(
-        i -> (is[end]-i+1)*(js[end]-findfirst(>(z / ws[i]), rs)+1), 
-        is
+        i -> (box[2]-i+1)*(box[4]-findfirst(>(z / ws[i]), rs)+1), 
+        box[1]:sk:box[2]
     )
     j = findfirst(>(z / ws[i]), rs)
 
@@ -131,40 +133,24 @@ function number_boxes(n, m, boxes)
     return M
 end
 
-function nufht_tay(nu, rs, cs, ws; K=100)
-    @assert issorted(rs) && issorted(ws)
-
-    # initialize output
-    gs = zeros(Float64, length(ws))
-
+function add_tay!(gs, nu, rs, cs, ws; K=100)
     for k=0:K
         gs .+= (-1)^k * (ws/2).^(2k+nu) / (factorial(big(k))*gamma(nu+k+1)) * sum(cs .* rs.^(2k+nu))
     end
-
-    return gs
 end
 
-function nufht_loc(nu, rs, cs, ws; K=30)
+function add_loc!(gs, nu, rs, cs, ws; K=30)
     @assert nu == 0
-    @assert issorted(rs) && issorted(ws)
-
-    # initialize output
-    gs = zeros(Float64, length(ws))
 
     for k=0:K
         gs .+= (-1)^k * (k==0 ? 1 : 2) * besselj.(k, ws*rs[end]/2).^2 * dot(2*ChebyshevT(I[1:k+1, k+1]).(rs/rs[end]).^2 .- 1, cs)
     end
-
-    return gs
 end
 
 a(k, nu) = k==0 ? 1 : prod((4nu^2 .- (1:2:(2k-1)).^2)) / (factorial(big(k))*8^k)
 
-function nufht_asy(nu, rs, cs, ws; K=10)
-    @assert issorted(rs) && issorted(ws)
-
-    # initialize output and temporary vectors
-    gs = zeros(Float64,    length(ws))
+function add_asy!(gs, nu, rs, cs, ws; K=10)
+    # initialize temporary vectors
     v1 = zeros(ComplexF64, length(ws))
     v2 = zeros(ComplexF64, length(ws))
 
@@ -180,38 +166,8 @@ function nufht_asy(nu, rs, cs, ws; K=10)
             - a(2k+1, nu) * imag.(v2) .* ws.^(-2k-1-1/2)
             )
     end
-
-    return gs
 end
 
-function nufht_dir(nu, rs, cs, ws)
-    @assert issorted(rs) && issorted(ws)
-
-    gs = sum(cs' .* besselj.(nu, ws*rs'), dims=2)
-
-    return gs
-end
-
-pole_H_hat(nu, k) = -((nu+1)/2 + k) * im/pi
-res_H_hat(nu, k)  = (-1)^k*im/pi*2.0^(-(2k + nu + 1))/(gamma(k+1)*gamma(nu+k+1))
-
-function nufht_res(nu, rs, cs, ws)
-    @assert issorted(rs) && issorted(ws)
-    if rs[end]*ws[end] > 10
-        @warn "Without asymptotics this NUFHT is only accurate for ωr < 10." maxlog=1
-    end
-
-    # initialize output
-    gs = zeros(ComplexF64, length(ws))
-
-    # number of residues to take
-    K = 30
-    for k=0:K
-        xi     = pole_H_hat(nu, k)
-        F_hat  = sum(cs .* rs .* exp.(2pi*im*xi*log.(rs)))
-        gs   .+= res_H_hat(nu, k) * F_hat * exp.(2pi*im*xi*log.(ws))
-    end
-    gs .*= -2pi*im ./ ws
-
-    return real.(gs)
+function add_dir!(gs, nu, rs, cs, ws)
+    gs .+= sum(cs' .* besselj.(nu, ws*rs'), dims=2)
 end

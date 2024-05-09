@@ -3,10 +3,10 @@ using LinearAlgebra, SpecialFunctions, FINUFFT, QuadGK, Plots, Plots.Measures, L
 include("./nufht.jl")
 
 nu = 0
-n  = 1000
-m  = 1000
+n  = 5000
+m  = 5000
 
-case = :bad
+case = :twodim
 
 if case == :one
     m = 1
@@ -77,13 +77,14 @@ end
 # rs  .= (rs .+ 1) * (bb-aa)/2 .+ aa
 # cs .*= (bb-aa)/2
 
-@time gs_asy  = nufht_asy(nu, rs, cs, ws, K=5)
-@time gs_tay  = nufht_tay(nu, rs, cs, ws, K=30)
-@time gs_wimp = nufht_wimp(rs, cs, ws,    K=50)
-@time gs_nufht = nufht(rs, cs, ws, min_box_dim=200)
+# @time gs_asy  = nufht_asy(nu, rs, cs, ws, K=5)
+# @time gs_tay  = nufht_tay(nu, rs, cs, ws, K=30)
+# @time gs_wimp = nufht_wimp(rs, cs, ws,    K=50)
+@time gs_nufht = nufht(nu, rs, cs, ws, min_box_dim=200)
 
 if max(n, m) < 10000
-    @time gs_dir  = nufht_dir(nu, rs, cs, ws)
+    gs_dir = zeros(Float64, n)
+    @time add_dir!(gs_dir, nu, rs, cs, ws)
     pl = plot(
         xlabel=L"\omega", ylabel=L"J_\nu(\omega r)",
         ylims=1.1.*extrema(gs_dir)
@@ -124,24 +125,24 @@ if max(n, m) < 10000
     #     label="Residue",
     #     color=:blue
     #     )
-    plot!(pl,
-        ws,
-        abs.((gs_dir - gs_asy) ./ gs_dir) .+ 1e-16,
-        label="Asymptotic",
-        color=:red
-        )
-    plot!(pl,
-        ws,
-        abs.((gs_dir - gs_tay) ./ gs_dir) .+ 1e-16,
-        label="Taylor",
-        color=:green
-        )
-    plot!(pl,
-        ws,
-        abs.((gs_dir - gs_wimp) ./ gs_dir) .+ 1e-16,
-        label="Wimp",
-        color=:orange
-        )
+    # plot!(pl,
+    #     ws,
+    #     abs.((gs_dir - gs_asy) ./ gs_dir) .+ 1e-16,
+    #     label="Asymptotic",
+    #     color=:red
+    #     )
+    # plot!(pl,
+    #     ws,
+    #     abs.((gs_dir - gs_tay) ./ gs_dir) .+ 1e-16,
+    #     label="Taylor",
+    #     color=:green
+    #     )
+    # plot!(pl,
+    #     ws,
+    #     abs.((gs_dir - gs_wimp) ./ gs_dir) .+ 1e-16,
+    #     label="Wimp",
+    #     color=:orange
+    #     )
     plot!(pl,
         ws,
         abs.((gs_dir - gs_nufht) ./ gs_dir) .+ 1e-16,
