@@ -1,0 +1,78 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+\usepackage[dvipsnames]{xcolor}
+\usepackage[normalem]{ulem}
+\usepackage[labelfont=bf]{caption}
+\usepackage{microtype, natbib, fancyhdr, siunitx, graphicx, hyperref, epstopdf, tikz, adjustbox, mathtools, float, anyfontsize}
+\usepackage{bm, amssymb, amsmath, amsthm, mathrsfs}
+\usepackage{etoolbox}
+\bibliographystyle{apalike}
+\input{preamble.tex}
+
+% whether to anonymize manuscript
+\newbool{anon}
+\setbool{anon}{false}
+
+% whether to include figs and tables
+\newbool{figs}
+\setbool{figs}{true}
+
+\def\spacingset#1{\renewcommand{\baselinestretch}%
+{#1}\small\normalsize} \spacingset{1}
+
+\sisetup{exponent-mode=input, retain-zero-exponent=true}
+
+\title{
+  \textbf{A Nonuniform Fast Hankel Transform} 
+} \ifbool{anon}{}{ \author{ Paul G. Beckman\thanks{corresponding author:
+\texttt{paul.beckman@cims.nyu.edu}} \thanks{PGB is supported in part by the
+Office of Naval Research under award \#N00014-21-1-2383 and by the U.S.
+Department of Energy, Office of Science, Office of Advanced Scientific Computing
+Research, Department of Energy Computational Science Graduate Fellowship under
+Award Number DE-SC0022158} \\ 
+    \small Courant Institute, \\ 
+    \small New York University
+    } }
+\date{}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+  \input{./src/abstract.tex}
+  
+  \bigskip
+
+  \noindent \textbf{Keywords:} 
+\end{abstract}
+
+\section{Introduction} \label{sec:intro}
+\input{./src/intro.tex}
+
+\section{Methods} \label{sec:methods}
+\input{./src/methods.tex}
+
+\section{Numerical results} \label{sec:results}
+\input{./src/results.tex}
+
+\section{Discussion} \label{sec:discussion}
+\input{./src/discussion.tex}
+
+\ifbool{anon}{}{
+  \renewcommand{\abstractname}{Acknowledgments}
+  \begin{abstract}
+  \noindent The authors would like to thank\dots
+  \end{abstract}
+
+  \renewcommand{\abstractname}{Competing Interests}
+  \begin{abstract}
+  \noindent The authors report no competing interests.
+  \end{abstract}
+}
+
+\bibliography{refs}{}
+
+\end{document}

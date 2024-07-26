@@ -1,0 +1,59 @@
+The Hankel or Fourier-Bessel transform of order $\nu$ of a function $f : (0,
+\infty) \to \C$ is given by
+\begin{equation} \label{eq:HT}
+    g(\omega) = \int_0^\infty f(r) J_\nu(\omega r) r \dif{r}.
+\end{equation}
+Discretizing this integral, we obtain the discrete Hankel transform (DHT)
+\begin{equation} \label{eq:DHT}
+    g_j = \sum_{k=1}^m c_k J_\nu(\omega_j r_k)
+\end{equation}
+for $j=1, \dots, n$, which can be written equivalently as the matrix-vector
+product
+\begin{equation}
+    \bm{g} = \bm{A}\bm{c}, \qquad \bm{A}_{jk} = J_\nu(\omega_j r_k).
+\end{equation}
+These transforms appear in a wide range of applications including
+imaging~\citep{higgins1988hankel, zhao2013fourier}, partial differential
+equations~\citep{bisseling1985fast,ali1999generalized}, and
+statistics~\cite{lord1954a, genton2002nonparametric}. In many such applications,
+a fully nonuniform DHT is desired, as the relevant frequencies $\omega_j$ may
+not be equispaced, and the most efficient quadrature rule for discretizing
+(\ref{eq:HT}) may have nodes $r_k$ which are also not equispaced.
+
+A number of methods exist in the literature to evaluate (\ref{eq:HT}) or
+(\ref{eq:DHT}). These include series expansion methods
+\citep{lord1954b,brunol1977fourier,cavanagh1979numerical}, convolution-based
+approaches \citep{siegman1977quasi, johansen1979fast, mook1983algorithm}, and
+projection-slice or Abel transform methods \citep{oppenheim1980computation,
+hansen1985fast, kapur1995algorithm}. See~\cite{cree1993algorithms} for a review
+of many of these early computational approaches. Unfortunately, these existing methods
+are either not applicable to the discrete case (\ref{eq:DHT}), require a
+particular choice of $\omega_j$ or $r_k$ due to the constraints of interpolation
+or quadrature subroutines, or suffer from low accuracy as a result of
+intermediate approximations. Therefore, extending these schemes to compute the
+fully nonuniform DHT with controllable accuracy is not straightforward. 
+
+More recently, butterfly algorithms \citep{oneil2010algorithm, li2015butterfly,
+pang2020interpolative} were introduced as a general machinery for evaluating
+oscillatory transforms including the nonuniform DHT in linear or quasilinear
+time. However, these algorithms require a precomputation or factorization stage
+for each new set of $\omega_j$ and $r_k$, which can be a bottleneck for
+applications in which these evaluation points change. In order to provide a
+precomputation-free fast DHT,~\cite{townsend2015fast} uses a combination of
+asymptotic expansions and Bessel function identities applicable to equispaced or
+perturbed ``quasi-equispaced'' grids, for example $j_{\nu,k} / j_{\nu,n+1}$
+where $j_{\nu,k}$ is the $k^{th}$ zero of $J_\nu$.
+
+We describe here a fully nonuniform fast Hankel transform (NUFHT) which
+generalizes~\cite{townsend2015fast} in a number of ways. First, we employ an
+adaptive partitioning scheme which, for any choice of $r_k$ and $\omega_j$,
+subdivides $\bm{A}$ into blocks for which matrix-vector products can be
+evaluated efficiently. Second, we use the nonuniform fast Fourier transform
+(NUFFT) \citep{dutt1993fast, greengard2004accelerating} to evaluate asymptotic
+expansions for nonuniform $r_k$ and $\omega_j$. Finally, we introduce the
+low-rank expansion of \cite{wimp1962polynomial} in the local regime where
+asymptotic expansions are not applicable. We derive error bounds for this
+low-rank expansion, allowing us to choose all approximation parameters
+automatically through error analysis which guarantees that the resulting error
+is bounded by the user-specified tolerance $\epsilon$. 
+
