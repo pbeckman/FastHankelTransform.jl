@@ -1,30 +1,86 @@
 
 function add_dir!(gs, nu, rs, cs, ws)
     @timeit TIMER "Direct" begin
-        for k in eachindex(ws)
+        for j in eachindex(ws)
             @inbounds begin
-                wk = ws[k]
-                @simd for j in eachindex(rs)
-                    gs[k] += cs[j] * besselj(nu, wk*rs[j]) 
+                wj = ws[j]
+                @simd for k in eachindex(rs)
+                    gs[j] += cs[k] * besselj(nu, wj*rs[k]) 
                 end
             end
         end
     end
 end
 
-function add_loc!(gs, nu, rs, cs, ws; K=30)
+function add_loc!(gs, nu, rs, cs, ws; 
+    K=30, cheb_buffer=nothing, bessel_buffer_1=nothing, bessel_buffer_2=nothing)
     # Wimp expansion only works for integer nu
     @assert isinteger(nu)
 
+    # center index of Wimp expansion
+    l0 = div(nu,2)
+
     @timeit TIMER "Local" begin
-        # TODO (pb 6/25/2024): use recurrences for Chebyshev and Bessel evals
-        for k=0:K
-            if nu == 0
-                gs .+= (-1)^k * (k==0 ? 1 : 2) * besselj.(k, ws*rs[end]/2).^2 * dot(2*ChebyshevT(I[1:k+1, k+1]).(rs/rs[end]).^2 .- 1, cs)
-            elseif iseven(nu)
-                gs .+= (k==0 ? 1 : 2) * besselj.(div(nu,2) + k, ws*rs[end]/2) .* besselj.(div(nu,2) - k, ws*rs[end]/2) * dot(ChebyshevT(I[1:2k+1, 2k+1]).(rs/rs[end]), cs)
+        # initialize temporary buffers for coefficients and Bessel evals
+        if isnothing(cheb_buffer)
+            cheb_buffer = zeros(Float64, K+1)
+        else
+            fill!(cheb_buffer, 0.0)
+        end
+        if isnothing(bessel_buffer_1)
+            bessel_buffer_1 = zeros(Float64, K+1)
+        else
+            fill!(bessel_buffer_1, 0.0)
+        end
+        if nu != 0 
+            if isnothing(bessel_buffer_2)
+                bessel_buffer_2 = zeros(Float64, l0+K+1)
             else
-                gs .+= 2 * besselj.(div(nu,2) + k + 1, ws*rs[end]/2) .* besselj.(div(nu,2) - k, ws*rs[end]/2) * dot(ChebyshevT(I[1:2k+2, 2k+2]).(rs/rs[end]), cs)
+                fill!(bessel_buffer_2, 0.0)
+            end
+        end
+
+        for l=0:K
+            @inbounds begin
+            for k in eachindex(rs)
+                if nu == 0
+                    cheb_buffer[l+1] += (l==0 ? 1 : 2) * (2cos(l*acos(rs[k]/rs[end]))^2 - 1) * cs[k]
+                elseif iseven(nu)
+                    cheb_buffer[l+1] += (l==0 ? 1 : 2) * cos(2l*acos(rs[k]/rs[end])) * cs[k]
+                else
+                    cheb_buffer[l+1] += 2 * cos((2l+1)*acos(rs[k]/rs[end])) * cs[k]
+                end
+            end
+            end
+        end
+
+        for j in eachindex(ws)
+            @inbounds begin
+            if nu == 0
+                # compute all necessary Bessel functions evals
+                besselj!(bessel_buffer_1, 0:K, ws[j]*rs[end]/2)
+                # square evals since orders l and -l have same magnitude 
+                bessel_buffer_1 .*= bessel_buffer_1
+                # use J_{-l} = (-1)^l J_l for negative orders
+                bessel_buffer_1[2:2:end] .*= -1
+            elseif iseven(nu)
+                # TODO (pb 7/26/2024) : debug signs and implement odd version
+                # compute all necessary Bessel functions evals
+                besselj!(bessel_buffer_2, 0:(l0+K), ws[j]*rs[end]/2)
+                # copy orders l0...l0+K to buffer
+                bessel_buffer_1 .= bessel_buffer_2[l0+1:end]
+                # multiply by orders l0...0
+                bessel_buffer_1[l0+1:-1:1] .*= bessel_buffer_2[1:l0+1]
+                # multiply by orders 1...K-l0
+                bessel_buffer_1[l0+2:end]  .*= bessel_buffer_2[2:K-l0+1]
+                # use J_{-n} = (-1)^n J_n for negative orders
+                bessel_buffer_1[l0+1+iseven(l0):2:end] .*= -1
+            else
+                besselj!(bessel_buffer_1, l0 .+ (0:K) .+ 1, ws[j]*rs[end]/2)
+                besselj!(bessel_buffer_2, l0 .- (0:K), ws[j]*rs[end]/2)
+                bessel_buffer_1 .*= bessel_buffer_2
+            end
+            gs[j] += dot(bessel_buffer_1, cheb_buffer)
             end
         end
     end
@@ -41,9 +97,11 @@ function add_asy!(gs, nu, rs, cs, ws;
             out_buffer = zeros(ComplexF64, length(ws))
         end
 
-        for k=0:K
+        for l=0:K
             @timeit TIMER "NUFFT" begin
-                in_buffer .= cs .* rs.^(-2k-1/2)
+                in_buffer  .= rs
+                in_buffer .^= -2l-1/2
+                in_buffer .*= cs
                 nufft1d3!(
                     rs, in_buffer, +1, NUFHT_TOL[], 
                     ws, out_buffer
@@ -51,15 +109,23 @@ function add_asy!(gs, nu, rs, cs, ws;
             end
             @timeit TIMER "Add NUFFT to output" begin
                 out_buffer .*= exp((-nu/2-1/4)*pi*im)
-                flbuf = reinterpret(Float64, out_buffer)
-                buf   = @view flbuf[1:2:end-1] # take real part
-                buf .*= sqrt(2/pi) * (-1)^k * NUFHT_ASY_COEF[][2k+1]
-                buf .*= ws.^(-2k-1/2)
-                gs  .+= buf
+                # take real part in place
+                flbuf  = reinterpret(Float64, out_buffer)
+                buf1   = @view flbuf[1:2:end-1]
+                # use imaginary part memory as second buffer
+                buf2   = @view flbuf[2:2:end]
+                buf2  .= ws
+                buf2 .^= -2l-1/2
+                # multiply by coefficient and do diagonal scaling
+                buf1 .*= sqrt(2/pi) * (-1)^l * NUFHT_ASY_COEF[][2l+1]
+                buf1 .*= buf2
+                gs  .+= buf1
             end
 
             @timeit TIMER "NUFFT" begin 
-                in_buffer .= cs .* rs.^(-2k-1-1/2)
+                in_buffer  .= rs
+                in_buffer .^= -2l-1-1/2
+                in_buffer .*= cs 
                 nufft1d3!(
                     rs, in_buffer, +1, NUFHT_TOL[], 
                     ws, out_buffer
@@ -67,11 +133,17 @@ function add_asy!(gs, nu, rs, cs, ws;
             end
             @timeit TIMER "Add NUFFT to output" begin
                 out_buffer .*= exp((-nu/2-1/4)*pi*im)
+                # take imaginary part in place
                 flbuf = reinterpret(Float64, out_buffer)
-                buf   = @view flbuf[2:2:end] # take imag part
-                buf .*= sqrt(2/pi) * (-1)^k * NUFHT_ASY_COEF[][2k+2]
-                buf .*= ws.^(-2k-1-1/2)
-                gs  .+= buf
+                buf1   = @view flbuf[2:2:end] 
+                # use real part memory as second buffer
+                buf2   = @view flbuf[1:2:end-1] 
+                buf2  .= ws
+                buf2 .^= -2l-1-1/2
+                # multiply by coefficient and do diagonal scaling
+                buf1 .*= sqrt(2/pi) * (-1)^l * NUFHT_ASY_COEF[][2l+2]
+                buf1 .*= buf2
+                gs  .-= buf1
             end
         end
     end

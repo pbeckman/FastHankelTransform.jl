@@ -36,15 +36,21 @@ function nufht(nu, rs, cs, ws;
     end
 
     @timeit TIMER "Initialize buffers" begin
-        # initialize temporary buffers for NUFFTs
+        # initialize temporary buffers
         in_buffer  = zeros(ComplexF64, m)
         out_buffer = zeros(ComplexF64, n)
+        cheb_buffer     = zeros(Float64, NUFHT_LOC_K[] + 1)
+        bessel_buffer_1 = zeros(Float64, NUFHT_LOC_K[] + 1)
+        bessel_buffer_2 = zeros(Float64, NUFHT_LOC_K[] + 1)
     end
 
     # add contributions of all boxes
     for (box_set, add_box!) in zip(boxes, (
         (gs, nu, rs, cs, ws) -> add_loc!(
-            gs, nu, rs, cs, ws, K=NUFHT_LOC_K[]
+            gs, nu, rs, cs, ws, K=NUFHT_LOC_K[],
+            cheb_buffer=cheb_buffer, 
+            bessel_buffer_1=bessel_buffer_1, 
+            bessel_buffer_2=bessel_buffer_2
             ), 
         (gs, nu, rs, cs, ws) -> add_asy!(
             gs, nu, rs, cs, ws, K=NUFHT_ASY_K[], 

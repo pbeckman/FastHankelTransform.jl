@@ -41,7 +41,7 @@ nu  = 0
 # number of sources
 m   = 10_000
 # number of targets
-n   = 10_000
+n   = 1_000_000
 # tolerance
 tol = 1e-8
 
@@ -52,7 +52,7 @@ K_loc = FastHankelTransform.NUFHT_LOC_K[]
 
 case = :twodimrandom
 # case = :exp
-# case = :lower
+# case = :one
 
 Random.seed!(123)
 rs, cs, ws, n, m = test_case(case, n, m)
@@ -69,10 +69,10 @@ ratios = [sum(prod.(dims.(box_set))) for box_set in boxes] / (n*m)
   Asymptotic: %.6f
   Direct:     %.6f\n", ratios...)
 
-println("Benchmarking 1D NUFFT...")
-ccs = ComplexF64.(cs)
-# @btime gs_nufft = nufft1d3($rs, $ccs, +1, $tol, $ws)
-@time gs_nufft = nufft1d3(rs, ccs, +1, tol, ws)
+# println("Benchmarking 1D NUFFT...")
+# ccs = ComplexF64.(cs)
+# # @btime gs_nufft = nufft1d3($rs, $ccs, +1, $tol, $ws)
+# @time gs_nufft = nufft1d3(rs, ccs, +1, tol, ws)
 
 if max(m, n) <= 1000
     gs_dir = zeros(Float64, n)
@@ -89,8 +89,8 @@ if max(n,m) <= 1000
     @show rank(M)
 end
 
-println("NUFHT:")
-@time gs_nufht = nufht(nu, rs, cs, ws, tol=tol)
+# println("NUFHT:")
+# @time gs_nufht = nufht(nu, rs, cs, ws, tol=tol)
 
 gr(size=(1000,700))
 default(margins=2mm, fontfamily="Computer Modern")

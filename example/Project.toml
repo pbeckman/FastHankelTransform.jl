@@ -1,5 +1,6 @@
 [deps]
 BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
+Bessels = "0e736298-9ec6-45e8-9647-e4fc86a2fe38"
 FINUFFT = "d8beea63-0952-562e-9c6a-8e8ef7364055"
 FastGaussQuadrature = "442a2c76-b920-505d-bb47-c5924d526838"
 FastHankelTransform = "3a9aa71a-4826-43c7-bf6d-7fc63822c18e"

@@ -2,8 +2,9 @@
 function test_case(case, n, m)
     pts = nothing
     if case == :one
-        rs = ones(m)
-        ws = collect(range(0, stop=1000, length=n))
+        rs = [1.0]
+        m  = 1
+        ws = collect(range(0, stop=100, length=n))
     elseif case == :exp
         ws = 10 .^ range(log10(0.25), stop=2, length=n)
         rs = 10 .^ range(log10(0.25), stop=2, length=m)

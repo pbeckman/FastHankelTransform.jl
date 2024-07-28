@@ -2,6 +2,7 @@ module FastHankelTransform
 
     using LinearAlgebra, SpecialFunctions, FINUFFT, ForwardDiff, Polynomials
     using JLD, Printf, TimerOutputs
+    import Bessels: besselj!
 
     export nufht
 
