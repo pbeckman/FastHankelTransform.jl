@@ -34,7 +34,7 @@ function add_loc!(gs, nu, rs, cs, ws;
         end
         if nu != 0 
             if isnothing(bessel_buffer_2)
-                bessel_buffer_2 = zeros(Float64, l0+K+1)
+                bessel_buffer_2 = zeros(Float64, l0+K+1+isodd(nu))
             else
                 fill!(bessel_buffer_2, 0.0)
             end
@@ -43,6 +43,7 @@ function add_loc!(gs, nu, rs, cs, ws;
         for l=0:K
             @inbounds begin
             for k in eachindex(rs)
+                # evaluate Chebyshev polynomials
                 if nu == 0
                     cheb_buffer[l+1] += (l==0 ? 1 : 2) * (2cos(l*acos(rs[k]/rs[end]))^2 - 1) * cs[k]
                 elseif iseven(nu)
@@ -63,22 +64,17 @@ function add_loc!(gs, nu, rs, cs, ws;
                 bessel_buffer_1 .*= bessel_buffer_1
                 # use J_{-l} = (-1)^l J_l for negative orders
                 bessel_buffer_1[2:2:end] .*= -1
-            elseif iseven(nu)
-                # TODO (pb 7/26/2024) : debug signs and implement odd version
+            else
                 # compute all necessary Bessel functions evals
-                besselj!(bessel_buffer_2, 0:(l0+K), ws[j]*rs[end]/2)
-                # copy orders l0...l0+K to buffer
-                bessel_buffer_1 .= bessel_buffer_2[l0+1:end]
+                besselj!(bessel_buffer_2, 0:(l0+K+isodd(nu)), ws[j]*rs[end]/2)
+                # copy orders l0...l0+K to buffer (starting index is 1 if odd)
+                bessel_buffer_1 .= bessel_buffer_2[l0+1+isodd(nu):end]
                 # multiply by orders l0...0
                 bessel_buffer_1[l0+1:-1:1] .*= bessel_buffer_2[1:l0+1]
                 # multiply by orders 1...K-l0
                 bessel_buffer_1[l0+2:end]  .*= bessel_buffer_2[2:K-l0+1]
                 # use J_{-n} = (-1)^n J_n for negative orders
-                bessel_buffer_1[l0+1+iseven(l0):2:end] .*= -1
-            else
-                besselj!(bessel_buffer_1, l0 .+ (0:K) .+ 1, ws[j]*rs[end]/2)
-                besselj!(bessel_buffer_2, l0 .- (0:K), ws[j]*rs[end]/2)
-                bessel_buffer_1 .*= bessel_buffer_2
+                bessel_buffer_1[l0+2:2:end] .*= -1
             end
             gs[j] += dot(bessel_buffer_1, cheb_buffer)
             end
@@ -115,11 +111,11 @@ function add_asy!(gs, nu, rs, cs, ws;
                 # use imaginary part memory as second buffer
                 buf2   = @view flbuf[2:2:end]
                 buf2  .= ws
-                buf2 .^= -2l-1/2
+                buf2 .^= -2l-1/2 # TODO (pb 7/28/2024) : should this be SIMD or something? what about other in-place ops?
                 # multiply by coefficient and do diagonal scaling
                 buf1 .*= sqrt(2/pi) * (-1)^l * NUFHT_ASY_COEF[][2l+1]
                 buf1 .*= buf2
-                gs  .+= buf1
+                gs   .+= buf1
             end
 
             @timeit TIMER "NUFFT" begin 
@@ -143,7 +139,7 @@ function add_asy!(gs, nu, rs, cs, ws;
                 # multiply by coefficient and do diagonal scaling
                 buf1 .*= sqrt(2/pi) * (-1)^l * NUFHT_ASY_COEF[][2l+2]
                 buf1 .*= buf2
-                gs  .-= buf1
+                gs   .-= buf1
             end
         end
     end

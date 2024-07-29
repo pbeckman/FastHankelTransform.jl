@@ -1,10 +1,10 @@
 module FastHankelTransform
 
-    using LinearAlgebra, SpecialFunctions, FINUFFT, ForwardDiff, Polynomials
+    using LinearAlgebra, FINUFFT, ForwardDiff
     using JLD, Printf, TimerOutputs
-    import Bessels: besselj!
+    import Bessels: besselj, besselj!
 
-    export nufht
+    export nufht, nufht!
 
     const TIMER = TimerOutput()
 

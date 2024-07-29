@@ -41,7 +41,7 @@ nu  = 0
 # number of sources
 m   = 10_000
 # number of targets
-n   = 1_000_000
+n   = 10_000_000
 # tolerance
 tol = 1e-8
 
@@ -51,7 +51,7 @@ K_asy = FastHankelTransform.NUFHT_ASY_K[]
 K_loc = FastHankelTransform.NUFHT_LOC_K[]
 
 case = :twodimrandom
-# case = :exp
+# case = :roots
 # case = :one
 
 Random.seed!(123)

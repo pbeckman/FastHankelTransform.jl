@@ -9,6 +9,7 @@ function test_case(case, n, m)
         ws = 10 .^ range(log10(0.25), stop=2, length=n)
         rs = 10 .^ range(log10(0.25), stop=2, length=m)
     elseif case == :roots
+        m  = n
         ws = FastGaussQuadrature.approx_besselroots(nu, n+1)
         rs = ws[1:end-1] / ws[end] 
         ws = ws[1:end-1]

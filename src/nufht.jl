@@ -3,9 +3,22 @@ Box = NTuple{4, Int64}
 
 function nufht(nu, rs, cs, ws; 
         tol=1e-8, max_levels=nothing, min_dim_prod=10_000, 
+        z_split=nothing, K_asy=nothing, K_loc=nothing) 
+    # initialize output
+    gs = zeros(Float64, length(ws))
+
+    return nufht!(gs, nu, rs, cs, ws; 
+    tol=tol, max_levels=max_levels, min_dim_prod=min_dim_prod, 
+    z_split=z_split, K_asy=K_asy, K_loc=K_loc)
+end
+
+function nufht!(gs, nu, rs, cs, ws; 
+        tol=1e-8, max_levels=nothing, min_dim_prod=10_000, 
         z_split=nothing, K_asy=nothing, K_loc=nothing)
     
     @assert issorted(rs) && issorted(ws)
+    @assert length(rs) == length(cs)
+    @assert length(gs) == length(ws)
 
     if nu != NUFHT_NU[] || tol != NUFHT_TOL[]
         # a different order or tolerance is being used
@@ -13,10 +26,8 @@ function nufht(nu, rs, cs, ws;
         setup_nufht!(nu, tol, z_split=z_split, K_asy=K_asy, K_loc=K_loc)
     end
 
-    # initialize output
     n = length(ws)
     m = length(rs)
-    gs = zeros(Float64, n)
 
     if n*m < min_dim_prod
         # matrix is small enough that direct summation will be faster
@@ -39,9 +50,9 @@ function nufht(nu, rs, cs, ws;
         # initialize temporary buffers
         in_buffer  = zeros(ComplexF64, m)
         out_buffer = zeros(ComplexF64, n)
-        cheb_buffer     = zeros(Float64, NUFHT_LOC_K[] + 1)
-        bessel_buffer_1 = zeros(Float64, NUFHT_LOC_K[] + 1)
-        bessel_buffer_2 = zeros(Float64, NUFHT_LOC_K[] + 1)
+        cheb_buffer     = zeros(Float64, NUFHT_LOC_K[]+1)
+        bessel_buffer_1 = zeros(Float64, NUFHT_LOC_K[]+1)
+        bessel_buffer_2 = zeros(Float64, NUFHT_LOC_K[]+1+div(nu,2)+isodd(nu))
     end
 
     # add contributions of all boxes
@@ -92,7 +103,7 @@ function setup_nufht!(nu, tol; z_split=nothing, K_asy=nothing, K_loc=nothing)
 
     # set number of terms in asymptotic expansion based on loose experiments
     # to balance effort of asymptotic and local expansions
-    k = isnothing(K_asy) ? min(20, floor(Int64, nu/5 + log10(1/tol)/4 + 1)) : K_asy
+    k = isnothing(K_asy) ? min(10, floor(Int64, nu/5 + log10(1/tol)/4 + 1)) : K_asy
     global NUFHT_ASY_K[] = k
 
     global NUFHT_Z_SPLIT[] = isnothing(z_split) ? load(path * "asy_z_table.jld")["zs"][i, j, k] : z_split
