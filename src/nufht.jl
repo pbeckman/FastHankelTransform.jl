@@ -1,5 +1,6 @@
 
-Box = NTuple{4, Int64}
+Box   = NTuple{4, Int64}
+Boxes = Tuple{Vector{Box}, Vector{Box}, Vector{Box}}
 
 function nufht(nu, rs, cs, ws; 
         tol=1e-8, max_levels=nothing, min_dim_prod=10_000, 
@@ -20,8 +21,8 @@ function nufht!(gs, nu, rs, cs, ws;
     @assert length(rs) == length(cs)
     @assert length(gs) == length(ws)
 
-    if nu != NUFHT_NU[] || tol != NUFHT_TOL[]
-        # a different order or tolerance is being used
+    if any([nu, tol, z_split, K_asy, K_loc] .!= [NUFHT_NU, NUFHT_TOL, NUFHT_Z_SPLIT, NUFHT_ASY_K, NUFHT_LOC_K])
+        # different parameters are being used
         # set global variables according to error analysis
         setup_nufht!(nu, tol, z_split=z_split, K_asy=K_asy, K_loc=K_loc)
     end
@@ -33,15 +34,15 @@ function nufht!(gs, nu, rs, cs, ws;
         # matrix is small enough that direct summation will be faster
         add_dir!(gs, nu, rs, cs, ws)
         return gs
-    elseif !isinteger(nu) && isinteger(2nu)
+    elseif !isinteger(nu)
         # asymptotic expansion is analytic for half integer orders
-        add_asy!(gs, nu, rs, cs, ws, K=floor(nu/2 - 1/4))
+        add_asy!(gs, nu, rs, cs, ws, K=NUFHT_ASY_K[])
         return gs
     end
 
     @timeit TIMER "Generate boxes" begin
         boxes = generate_boxes(
-            rs, ws, NUFHT_Z_SPLIT[]; 
+            rs, ws, z_split=NUFHT_Z_SPLIT[]; 
             max_levels=max_levels, min_dim_prod=min_dim_prod
             )
     end
@@ -85,8 +86,8 @@ function setup_nufht!(nu, tol; z_split=nothing, K_asy=nothing, K_loc=nothing)
     if tol < 1e-15
         error("cannot set NUFHT tolerance below 1e-15")
     end
-    if !isinteger(nu) || nu < 0 || nu > 100 
-        error("only NUFHT with integer orders ν = 0,1,...,100 are implemented") 
+    if nu < 0 || !isinteger(2nu) || (isinteger(nu) && nu > 100) || (!isinteger(nu) && isinteger(2nu) && nu > 19/2)
+        error("only NUFHT with integer orders ν = 0,1,...,100 and half-integer orders ν = 1/2,3/2,...,19/2 are implemented") 
     end
 
     # path to tables
@@ -95,22 +96,33 @@ function setup_nufht!(nu, tol; z_split=nothing, K_asy=nothing, K_loc=nothing)
     # set order
     i = nu + 1
     global NUFHT_NU[]       = nu
-    global NUFHT_ASY_COEF[] = load(path * "asy_a_table.jld")["as"][i, :]
+    global NUFHT_ASY_COEF[] = load(path * "asy_a_table.jld")["as"][Int64(2nu + 1), :]
 
     # set tolerance
     j = max(1, ceil(Int64, -log10(tol) / 4))
     global NUFHT_TOL[] = tol
 
-    # set number of terms in asymptotic expansion based on loose experiments
-    # to balance effort of asymptotic and local expansions
-    k = isnothing(K_asy) ? min(10, floor(Int64, nu/5 + log10(1/tol)/4 + 1)) : K_asy
-    global NUFHT_ASY_K[] = k
+    if isinteger(nu)
+        # set number of terms in asymptotic expansion based on loose experiments
+        # to balance effort of asymptotic and local expansions
+        k = isnothing(K_asy) ? min(10, floor(Int64, nu/5 + log10(1/tol)/4 + 1)) : K_asy
+        global NUFHT_ASY_K[] = k
 
-    global NUFHT_Z_SPLIT[] = isnothing(z_split) ? load(path * "asy_z_table.jld")["zs"][i, j, k] : z_split
-    global NUFHT_LOC_K[]   = isnothing(K_loc) ? load(path * "wimp_K_table.jld")["Ks"][i, j, k] : K_loc
+        global NUFHT_Z_SPLIT[] = isnothing(z_split) ? load(path * "asy_z_table.jld")["zs"][i, j, k] : z_split
+        global NUFHT_LOC_K[]   = isnothing(K_loc) ? load(path * "wimp_K_table.jld")["Ks"][i, j, k] : K_loc
+    else
+        # set number of Hankel expansion terms to give exact
+        # non-asymptotic expression
+        global NUFHT_ASY_K[] = Int64(nu + 1/2)
+
+        # set unused constants to defaults
+        global NUFHT_Z_SPLIT[] = NaN
+        global NUFHT_LOC_K[]   = -1
+    end
 end
 
-function generate_boxes(rs, ws, z; max_levels=nothing, min_dim_prod=10_000)
+function generate_boxes(rs, ws; 
+    z_split=NUFHT_Z_SPLIT[], max_levels=nothing, min_dim_prod=10_000)
     n, m = length(ws), length(rs)
     if isnothing(max_levels)
         max_levels = floor(Int64, log2(min(n, m)^2 / min_dim_prod))
@@ -121,19 +133,19 @@ function generate_boxes(rs, ws, z; max_levels=nothing, min_dim_prod=10_000)
     dir_boxes = Vector{Box}([])
 
     # find submatrix (i0, i1, j0, j1) which contains both loc and asy regions
-    i0 = findfirst(>(z / rs[end]), ws)
+    i0 = findfirst(>(z_split / rs[end]), ws)
     if m == 1
         i1 = i0-1
     else
-        i1 = findfirst(>(z / rs[1]), ws)
+        i1 = findfirst(>(z_split / rs[1]), ws)
         i1 = isnothing(i1) ? n : i1-1
     end
 
-    j0 = findfirst(>(z / ws[end]), rs)
+    j0 = findfirst(>(z_split / ws[end]), rs)
     if n == 1
         j1 = j0-1
     else
-        j1 = findfirst(>(z / ws[1]), rs)
+        j1 = findfirst(>(z_split / ws[1]), rs)
         j1 = isnothing(j1) ? m : j1-1
     end
 
@@ -178,7 +190,7 @@ function generate_boxes(rs, ws, z; max_levels=nothing, min_dim_prod=10_000)
         for box in dir_boxes
             i0b, i1b, j0b, j1b = box
             if (i1b-i0b+1)*(j1b-j0b+1) > 4*min_dim_prod
-                (ispl, jspl) = split_box(rs, ws, box, z)
+                (ispl, jspl) = split_box(rs, ws, box, z_split)
                 if ispl > i0b
                     push!(loc_boxes, (i0b, ispl-1, j0b, jspl-1))
                     push!(new_dir_boxes, (i0b, ispl-1, jspl, j1b))

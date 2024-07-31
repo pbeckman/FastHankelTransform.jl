@@ -17,6 +17,9 @@ function add_loc!(gs, nu, rs, cs, ws;
     # Wimp expansion only works for integer nu
     @assert isinteger(nu)
 
+    n = length(ws)
+    m = length(rs)
+
     # center index of Wimp expansion
     l0 = div(nu,2)
 
@@ -63,18 +66,18 @@ function add_loc!(gs, nu, rs, cs, ws;
                 # square evals since orders l and -l have same magnitude 
                 bessel_buffer_1 .*= bessel_buffer_1
                 # use J_{-l} = (-1)^l J_l for negative orders
-                bessel_buffer_1[2:2:end] .*= -1
+                view(bessel_buffer_1, 2:2:(K+1)) .*= -1
             else
                 # compute all necessary Bessel functions evals
                 besselj!(bessel_buffer_2, 0:(l0+K+isodd(nu)), ws[j]*rs[end]/2)
                 # copy orders l0...l0+K to buffer (starting index is 1 if odd)
-                bessel_buffer_1 .= bessel_buffer_2[l0+1+isodd(nu):end]
+                bessel_buffer_1 .= view(bessel_buffer_2, l0+1+isodd(nu):length(bessel_buffer_2))
                 # multiply by orders l0...0
-                bessel_buffer_1[l0+1:-1:1] .*= bessel_buffer_2[1:l0+1]
+                view(bessel_buffer_1, l0+1:-1:1) .*= view(bessel_buffer_2, 1:l0+1)
                 # multiply by orders 1...K-l0
-                bessel_buffer_1[l0+2:end]  .*= bessel_buffer_2[2:K-l0+1]
+                view(bessel_buffer_1, l0+2:(K+1)) .*= view(bessel_buffer_2, 2:K-l0+1)
                 # use J_{-n} = (-1)^n J_n for negative orders
-                bessel_buffer_1[l0+2:2:end] .*= -1
+                view(bessel_buffer_1, l0+2:2:(K+1)) .*= -1
             end
             gs[j] += dot(bessel_buffer_1, cheb_buffer)
             end
@@ -94,10 +97,12 @@ function add_asy!(gs, nu, rs, cs, ws;
         end
 
         for l=0:K
-            @timeit TIMER "NUFFT" begin
+            @timeit TIMER "Set up NUFFT input" begin
                 in_buffer  .= rs
                 in_buffer .^= -2l-1/2
                 in_buffer .*= cs
+            end
+            @timeit TIMER "NUFFT" begin
                 nufft1d3!(
                     rs, in_buffer, +1, NUFHT_TOL[], 
                     ws, out_buffer
@@ -118,10 +123,12 @@ function add_asy!(gs, nu, rs, cs, ws;
                 gs   .+= buf1
             end
 
-            @timeit TIMER "NUFFT" begin 
+            @timeit TIMER "Set up NUFFT input" begin
                 in_buffer  .= rs
                 in_buffer .^= -2l-1-1/2
                 in_buffer .*= cs 
+            end
+            @timeit TIMER "NUFFT" begin
                 nufft1d3!(
                     rs, in_buffer, +1, NUFHT_TOL[], 
                     ws, out_buffer

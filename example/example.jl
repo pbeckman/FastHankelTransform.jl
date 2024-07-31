@@ -21,27 +21,12 @@ function number_boxes(n, m, boxes)
     return M
 end
 
-function skeleton_plot(n, boxes)
-    pl = plot(xticks=([],[]), yticks=([],[]), axis=([], false))
-    for (box_set, color) in zip(boxes, [:red, :dodgerblue, :black])
-        for box in box_set
-            i0b, i1b, j0b, j1b = box
-            plot!(pl, 
-                [j0b, j1b, j1b, j0b, j0b], 
-                [n-i0b+1, n-i0b+1, n-i1b+1, n-i1b+1, n-i0b+1],
-                c=color, line=(color == :black ? (2, :dash) : (2, :solid)), label="")
-        end
-    end
-
-    return pl
-end
-
 # order of transform
-nu  = 0
+nu  = 7/2
 # number of sources
-m   = 10_000
+m   = 1_000
 # number of targets
-n   = 10_000_000
+n   = 1_000
 # tolerance
 tol = 1e-8
 
@@ -50,8 +35,8 @@ FastHankelTransform.setup_nufht!(nu, tol)
 K_asy = FastHankelTransform.NUFHT_ASY_K[]
 K_loc = FastHankelTransform.NUFHT_LOC_K[]
 
-case = :twodimrandom
-# case = :roots
+# case = :twodimrandom
+case = :roots
 # case = :one
 
 Random.seed!(123)
@@ -61,13 +46,17 @@ println("Benchmarking NUFHT...")
 # @btime gs_nufht = nufht($nu, $rs, $cs, $ws, tol=$tol, max_levels=5)
 @time gs_nufht = nufht(nu, rs, cs, ws, tol=tol);
 
-dims(box) = (box[2] - box[1] + 1, box[4] - box[3] + 1)
-boxes = FastHankelTransform.generate_boxes(rs, ws, FastHankelTransform.NUFHT_Z_SPLIT[])
-ratios = [sum(prod.(dims.(box_set))) for box_set in boxes] / (n*m)
-@printf("Portion of entries by expansion:  
-  Local:      %.6f
-  Asymptotic: %.6f
-  Direct:     %.6f\n", ratios...)
+if isinteger(nu)
+    dims(box) = (box[2] - box[1] + 1, box[4] - box[3] + 1)
+    boxes = FastHankelTransform.generate_boxes(
+        rs, ws, z_split=FastHankelTransform.NUFHT_Z_SPLIT[]
+        )
+    ratios = [sum(prod.(dims.(box_set))) for box_set in boxes] / (n*m)
+    @printf("Portion of entries by expansion:  
+    Local:      %.6f
+    Asymptotic: %.6f
+    Direct:     %.6f\n", ratios...)
+end
 
 # println("Benchmarking 1D NUFFT...")
 # ccs = ComplexF64.(cs)

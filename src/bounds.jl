@@ -1,12 +1,33 @@
 
+function generate_tables()
+    nus_all   = 0:0.5:100 
+    nus_int   = 0:100
+    tols      = [1e-4, 1e-8, 1e-12, 1e-15]
+    max_asy_K = 10
+    asy_Ks    = 1:max_asy_K
+
+    # path to tables
+    path = join(split(pathof(FastHankelTransform), '/')[1:end-2], '/') * "/tables/"
+
+    as = generate_asy_a_table(nus_all, max_asy_K)
+    save(path * "asy_a_table.jld", "as", as)
+
+    zs = generate_asy_z_table(nus_int, asy_Ks, tols)
+    save(path * "asy_z_table.jld", "zs", zs)
+
+    Ks = generate_wimp_K_table(nus_int, asy_Ks, zs, tols)
+    save(path * "wimp_K_table.jld", "Ks", Ks)
+end
+
 # coefficients in Hankel's expansion
 a(k, nu) = k==0 ? 1 : Float64(prod(big.(4*nu^2 .- (1:2:(2k-1)).^2)) / (factorial(big(k))*big(8)^k))
 
-function generate_asy_coef_table(nus, max_asy_K)
+function generate_asy_a_table(nus, max_asy_K)
     Js = 0:(2max_asy_K + 1)
     as = Array{Float64}(undef, length(nus), length(Js))
     for (i, nu) in enumerate(nus)
         for (j, J) in enumerate(Js)
+            @printf("computing asymptotic coefficient for ν = %.1f, j = %i...\n", nu, J)
             as[i, j] = a(J, nu)
         end
     end
@@ -63,7 +84,6 @@ function generate_wimp_K_table(nus, asy_Ks, zs, tols)
     for (i, nu) in enumerate(nus)
         for (j, tol) in enumerate(tols)
             for (k, asy_K) in enumerate(asy_Ks)
-                @show nu, tol, asy_K
                 @printf("computing Wimp K for ν = %i, tol = %.0e, asymptotic K = %i...\n", nu, tol, asy_K)
 
                 conv = false
