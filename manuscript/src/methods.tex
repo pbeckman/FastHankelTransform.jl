@@ -1,78 +1,84 @@
 
 \subsection{Asymptotic expansion}
 
-The first $2L$ terms of Hankel's expansion for $z \to \infty$ are given by
+The first $2M$ terms of Hankel's expansion for $z \to \infty$ are given by
 \begin{equation}
     J_\nu(z)
     \sim \sqrt{\frac{2}{\pi z}} \left( 
-        \cos\left(\mu\right) \sum_{\ell=0}^L (-1)^\ell \frac{a_{2\ell}(\nu)}{z^{2\ell}}
-        - \sin\left(\mu\right) \sum_{\ell=0}^L (-1)^\ell \frac{a_{2\ell+1}(\nu)}{z^{2\ell+1}}
+        \cos\left(\mu\right) \sum_{\ell=0}^{M-1} (-1)^\ell \frac{a_{2\ell}(\nu)}{z^{2\ell}}
+        - \sin\left(\mu\right) \sum_{\ell=0}^{M-1} (-1)^\ell \frac{a_{2\ell+1}(\nu)}{z^{2\ell+1}}
         \right)
 \end{equation}
 where $\mu := z - \frac{(2\nu+1)\pi}{4}$ and 
 \begin{equation}
-    a_p(\nu) := \frac{(4\nu^2 - 1)(4\nu^2 - 3)\dots(4\nu^2 - (2p-1)^2)}{p! 8^p}.
+    a_\ell(\nu) := \frac{(4\nu^2 - 1)(4\nu^2 - 3)\dots(4\nu^2 - (2\ell-1)^2)}{\ell! 8^\ell}.
 \end{equation}
-This expansion provides a means of evaluating products 
 
-Hankel's expansion and evaluation with the NUFFT
+\red{Matvec evaluation with the NUFFT}
 
-Error bound
+\red{Error bound}
 
 \subsection{Local expansion}
 
-Wimp expansion and evaluation as low-rank matrix block
+If one looks at a rectangle $[0, \Omega] \times [0, R]$ where $\Omega R$ is
+sufficiently small, $J_\nu(\omega r)$ is approximately low-rank for all $\omega
+\in [0, \Omega], r \in [0, R]$. Fortuitously, one such low-rank approximation is
+available in closed form \cite{wimp1962polynomial}
+\begin{align}
+    J_\nu(\omega r) = \sum_{\ell=0}^\infty \delta_\ell C_{2\ell}(\omega R) T_{2\ell}\left( \frac{r}{R} \right)
+\end{align}
 
-\begin{lemma} \label{lem:wimp} Truncating the Wimp expansion after $K$ terms
+\begin{lemma} \label{lem:wimp} Truncating the Wimp expansion after $L$ terms
     gives
     \begin{equation}
-        \abs{J_\nu(\omega r) - \sum_{k=0}^K C_{2k}(\omega R) T_{2k}\left( \frac{r}{R} \right)} 
-        \leq \frac{2\exp\left\{ \frac{\nu}{2}(\beta - \gamma) + (K+1)(\beta + \gamma) \right\}}{1 - e^{\beta + \gamma}}
+        \abs{J_\nu(\omega r) - \sum_{\ell=0}^L C_{2\ell}(\omega R) T_{2\ell}\left( \frac{r}{R} \right)} 
+        \leq \frac{2\exp\left\{ \frac{\nu}{2}(\beta - \gamma) + (L+1)(\beta + \gamma) \right\}}{1 - e^{\beta + \gamma}}
     \end{equation}
     for all $\omega \in [0, \Omega], r \in [0, R]$, where
     \begin{align}
         \psi(p) &:= \log p + \sqrt{1 - p^2} - \log\left( 1 + \sqrt{1 - p^2} \right) \\
-        \beta &:= \psi\left( \frac{\omega R}{\nu + 2K + 2} \right) \\
+        \beta &:= \psi\left( \frac{\Omega R}{\nu + 2L + 2} \right) \\
         \gamma &:= \begin{cases}
-            \psi\left( \frac{\omega R}{2K + 2 - \nu} \right) & K + 1 \geq \frac{\nu}{2} \\
+            \psi\left( \frac{\Omega R}{2L + 2 - \nu} \right) & L + 1 \geq \frac{\nu}{2} \\
             0 & \text{otherwise}
         \end{cases}
     \end{align}
 \end{lemma}
 \begin{proof}
-    For $\nu$ even, the truncation error after $K$ terms is bounded by
+    For $\nu$ even, the truncation error after $L$ terms is bounded by
     \begin{align}
-        \abs{\sum_{k=K+1}^\infty C_{2k}(\omega R) T_{2k}\left( \frac{r}{R} \right)}
-        &\leq 2\sum_{k=K+1}^\infty \abs{J_{\frac{\nu}{2} + k}\left(\frac{\omega R}{2}\right)} \abs{J_{\frac{\nu}{2} - k}\left(\frac{\omega R}{2}\right)}.
+        \abs{\sum_{\ell=L+1}^\infty C_{2\ell}(\omega R) T_{2\ell}\left( \frac{r}{R} \right)}
+        &\leq 2\sum_{\ell=L+1}^\infty \abs{J_{\frac{\nu}{2} + \ell}\left(\frac{\omega R}{2}\right)} \abs{J_{\frac{\nu}{2} - \ell}\left(\frac{\omega R}{2}\right)}.
     \end{align}
-    Define $p_k := \omega R / (\nu + 2k)$. Then by Siegel's bound
+    Define $p_\ell(\omega) := \omega R / (\nu + 2\ell)$. Then by Siegel's bound
     \cite[10.14.5]{olver2010nist} we have
     \begin{align}
-        \abs{J_{\frac{\nu}{2} + k}\left(\frac{\omega R}{2}\right)}
-        &= \abs{J_{\frac{\nu}{2} + k}\bigg(\Big(\frac{\nu}{2} + k\Big) p_k\bigg)}
-        \leq \exp\left\{ \Big(\frac{\nu}{2} + k\Big) \beta \right\},
+        \abs{J_{\frac{\nu}{2} + \ell}\left(\frac{\omega R}{2}\right)}
+        &= \abs{J_{\frac{\nu}{2} + \ell}\bigg(\Big(\frac{\nu}{2} + \ell\Big) p_\ell(\omega)\bigg)} \\
+        &\leq \exp\left\{ \Big(\frac{\nu}{2} + \ell\Big) \psi\big(p_\ell(\omega)\big)\right\} \\
+        &\leq \exp\left\{ \Big(\frac{\nu}{2} + \ell\Big) \beta \right\},
     \end{align}
     where the last inequality follows from the fact that $\psi$ is an increasing
-    function on $(0,1]$, and thus $\psi\left(p_k\right) \leq \beta < 0$
-    for all $k \geq K+1$. 
+    function on $(0,1)$, and thus $\psi\big(p_\ell(\omega)\big) \leq \beta < 0$
+    for all $\ell \geq L+1$ and all $\omega \in [0, \Omega]$. 
     
-    If $K+1 \geq \frac{\nu}{2}$, we define $q_k := x / (2k -
-    \nu)$ and apply Siegel's bound again to obtain
+    If $L+1 \geq \frac{\nu}{2}$, we define $q_\ell(\omega) := \omega R / (2\ell
+    - \nu)$ and apply Siegel's bound again to obtain
     \begin{align}
-        \abs{J_{\frac{\nu}{2} - k}\left(\frac{\omega R}{2}\right)}
-        &= \abs{J_{k - \frac{\nu}{2}}\bigg(\Big(k - \frac{\nu}{2}\Big) q_k\bigg)} 
-        \leq \exp\left\{ \Big(k - \frac{\nu}{2}\Big) \gamma \right\}.
+        \abs{J_{\frac{\nu}{2} - \ell}\left(\frac{\omega R}{2}\right)}
+        &= \abs{J_{\ell - \frac{\nu}{2}}\bigg(\Big(\ell - \frac{\nu}{2}\Big) q_\ell(\omega)\bigg)} 
+        \leq \exp\left\{ \Big(\ell - \frac{\nu}{2}\Big) \gamma \right\}.
     \end{align}
-    If $K+1 < \frac{\nu}{2}$, Siegel's bound does not apply and we use instead
-    the simple bound $\abs{J_{\frac{\nu}{2} - k}\left(\frac{\omega R}{2}\right)}
-    \leq 1$, which is equivalent to taking $\gamma = 0$. 
+    If $L+1 < \frac{\nu}{2}$, Siegel's bound does not apply and we use instead
+    the simple bound $\abs{J_{\frac{\nu}{2} - \ell}\left(\frac{\omega
+    R}{2}\right)} \leq 1$, which is equivalent to taking $\gamma = 0$. 
 
     All that remains is to apply a geometric series argument
     \begin{align}
-        \abs{J_\nu(\omega r) - \sum_{k=0}^K C_{2k}(\omega R) T_{2k}\left( \frac{r}{R} \right)}
-        &\leq 2\sum_{k=K+1}^\infty \exp\left\{ \Big(\frac{\nu}{2} + k\Big) \beta + \Big(k - \frac{\nu}{2}\Big) \gamma \right\} \\
-        &= 2\exp\left\{\frac{\nu}{2}(\beta - \gamma)\right\} \sum_{k=K+1}^\infty \left( e^{\beta + \gamma} \right)^k \\
-        &= \frac{2\exp\left\{ \frac{\nu}{2}(\beta - \gamma) + (K+1)(\beta + \gamma) \right\}}{1 - e^{\beta + \gamma}}
+        \abs{J_\nu(\omega r) - \sum_{\ell=0}^L C_{2\ell}(\omega R) T_{2\ell}\left( \frac{r}{R} \right)}
+        &\leq 2\sum_{\ell=L+1}^\infty \exp\left\{ \Big(\frac{\nu}{2} + \ell\Big) \beta + \Big(\ell - \frac{\nu}{2}\Big) \gamma \right\} \\
+        &= 2\exp\left\{\frac{\nu}{2}(\beta - \gamma)\right\} \sum_{\ell=L+1}^\infty \left( e^{\beta + \gamma} \right)^\ell \\
+        &= \frac{2\exp\left\{ \frac{\nu}{2}(\beta - \gamma) + (L+1)(\beta + \gamma) \right\}}{1 - e^{\beta + \gamma}}
     \end{align}
     A similar calculation can be carried out for $\nu$ odd.
 \end{proof}
@@ -80,22 +86,20 @@ Wimp expansion and evaluation as low-rank matrix block
 This result is rather opaque regarding the impact of the various parameters
 because we have not utilized any bounds to simplify the function $\psi$.
 However, it remains relatively tight for $\nu = 0$ and is sufficient for our
-purposes, because given $z, K > 0$, Lemma \ref{lem:wimp} gives a bound on the
+purposes, because given $z, L > 0$, Lemma \ref{lem:wimp} gives a bound on the
 pointwise error in approximating any block of the matrix $J_\nu(\omega_j r_k)$
-for which $\omega r \leq z$ using the $K$-term Wimp expansion. 
-
-\red{Is this bound monotonic in $\Omega R$? We need this to justify checking only that bound at the cutoff value $z$.}
+for which $\omega r \leq z$ using the $L$-term Wimp expansion.
 
 \subsection{Determining the cutoff between expansions}
 
 With these error bounds in hand, we precompute the following tables for
 tolerances $\epsilon = \texttt{1e-4}, \dots, \texttt{1e-15}$, orders $\nu = 1,
-\dots, 20$, and number of asymptotic expansion terms $M = 1, \dots, 20$
+\dots, 100$, and number of asymptotic expansion terms $M = 1, \dots, 20$
 \begin{itemize}
     \item $z_{\nu, \epsilon}^M$ such that the $M$-term asymptotic expansion of
     $J_\nu(\omega r)$ is $\epsilon$-accurate for all $\omega r > z_{\nu,
     \epsilon}^M$
-    \item $K_{\nu, \epsilon}^M$ such that the $K_{\nu, \epsilon}^M$-term Wimp
+    \item $L_{\nu, \epsilon}^M$ such that the $L_{\nu, \epsilon}^M$-term Wimp
     expansion of $J_\nu(\omega r)$ is $\epsilon$-accurate for all $\omega r \leq
     z_{\nu, \epsilon}^M$
 \end{itemize}
@@ -112,7 +116,7 @@ the local, asymptotic, and direct evaluations.
 \subsection{Subdividing the matrix into blocks by expansion}
 
 Having established error bounds which allow us to automatically select the
-number of asymptotic terms $M$, local terms $K$, and crossover point $z$ given a
+number of asymptotic terms $M$, local terms $L$, and crossover point $z$ given a
 tolerance $\epsilon$ and order $\nu$, we now discuss how to subdivide the matrix
 $\bm{A}$ into three sets of blocks, each of which can be efficiently evaluated
 as described above
@@ -136,20 +140,20 @@ We start by initializing $\mathscr{A} = \mathscr{L} = \{\}$ and $\mathscr{D} =
 \{(1:m, 1:n)\}$. The algorithm then proceeds iteratively as follows for each box
 $(j_0:j_1, k_0:k_1) \in \mathscr{D}$
 \begin{itemize}
-    \item Compute $(j,k)$ which solve
+    \item Compute $(j,k)$ which solves
     \begin{align}
         \text{maximize} &\quad (j-j_0)(k_1-k) + (j_1-j)(k-k_0) \\
-        \text{such that} &\quad j_0 \leq j \leq j_1 \\ 
-        &\quad k_0 \leq k \leq k_1 \\ 
-        &\quad \omega_j r_k \leq z
+        \text{such that} &\quad j_0 \leq j \leq j_1 \nonumber \\ 
+        &\quad k_0 \leq k \leq k_1 \nonumber \\ 
+        &\quad \omega_j r_k \leq z \nonumber
     \end{align}
     \item Remove $(j_0:j_1, k_0:k_1)$ from $\mathscr{D}$
     \item Add $(j+1:j_1, k+1:k_1)$ to $\mathscr{A}$ 
     \item Add $(j_0:j, k_0:k)$ to $\mathscr{L}$ 
     \item Add $(j_0:j, k+1:k_1)$ and $(j+1:j_1, k_0:k)$ to $\mathscr{D}$ 
 \end{itemize}
-We repeat the above steps until all boxes in $\mathscr{D}$ are small enough to
-be evaluated directly.
+We repeat the above subdivision scheme until all remaining boxes in
+$\mathscr{D}$ are small enough to be evaluated directly.
 
 \begin{figure}
     \centering
@@ -162,4 +166,13 @@ be evaluated directly.
     \includegraphics[width=0.23\textwidth]{./figures/nufht_boxes_lvl4.pdf}
     \caption{Direct (black), local (red), and asymptotic (yellow) boxes of
     $J_\nu(\omega_j r_k)$}
-  \end{figure}
+\end{figure}
+
+\subsection{Computational complexity}
+
+If $\omega_j r_k \leq z$ for all $j=1,\dots,n$ and $k=1,\dots,m$ then only the
+low-rank local expansion is used, resulting in $\bO(m + n)$ complexity. If
+instead $\omega_j r_k > z$ everywhere, then only the asymptotic expansion is
+used, giving $\bO(m + n\log n)$ complexity. The third case, in which $\bm{A}$ is
+subdivided in a non-trivial way, is more nuanced. \red{Complexity analysis for
+subdivided case}

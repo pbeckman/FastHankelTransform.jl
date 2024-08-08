@@ -1,10 +1,59 @@
 \subsection{Comparison to direct evaluation}
 
+\red{Scaling and accuracy tests against direct evaluation}
+
 \subsection{Computing Fourier transforms of radial functions}
-
-\begin{equation*}
+For radial functions $f(\bm{r}) = f(\norm{\bm{r}})$ in $\R^d$, one can integrate
+out the radial variables analytically, reducing the $d$-dimensional Fourier
+integral to a single Hankel transform
+\begin{align}
     \hat{f}(\bm{\omega}) 
-    = \int_{\R^d} f(\norm{\bm{r}}) e^{i\bm{\omega}^\top \bm{r}} d\bm{r}
-    = \frac{(2\pi)^{\frac{d}{2}}}{\omega^{\frac{d}{2} - 1}} \int_0^\infty f(r) J_{\frac{d}{2} - 1}(\omega r) r^{\frac{d}{2}} dr
-  \end{equation*}
+    = \int_{\R^d} f(\norm{\bm{r}}) e^{i\bm{\omega}^\top \bm{r}} \dif{\bm{r}}
+    = \frac{(2\pi)^{\frac{d}{2}}}{\omega^{\frac{d}{2} - 1}} \int_0^\infty f(r) J_{\frac{d}{2} - 1}(\omega r) r^{\frac{d}{2}} \dif{r}.
+\end{align}
+We compare two methods of computing $\hat{f}$ for the indicator function of the
+unit disk $f(r) = \ind{0 \leq r \leq 1}$ to absolute error $\epsilon = 10^{-12}$
+at $n$ equispaced points $\omega_j \in [0, \omega_{\text{max}}]$. First, we use
+a Gauss-Legendre quadrature rule on $[0,1]$ with nodes $r_k$ and weights $w_k$.
+We utilize the NUFHT to compute the resulting sum
+\begin{align}
+  \hat{f}(\omega) 
+  &= 2\pi\int_0^1 J_0(\omega r) r \dif{r}
+  \approx 2\pi \sum_{k=1}^m w_k J_0(\omega r_k) r_k,
+\end{align}
+doubling the number of nodes $m$ until the error in the computed integral is
+less than $\epsilon$. Second, we use a tensor product quadrature rule in polar
+coordinates. We use the same $m$-point Gauss-Legendre rule in $r$ and a
+trapezoidal rule in $\theta$. We utilize the NUFFT to compute the resulting
+double sum
+\begin{align}
+  \hat{f}(\omega) 
+  &= \int_0^{2\pi} \int_0^1 e^{ir(\omega_1\cos\theta + \omega_2\sin\theta)} r \dif{r} \dif{\theta} \\
+  &\approx \frac{2\pi}{t} \sum_{k=1}^{m} \sum_{s=1}^{t} w_k r_k \exp\left\{ir_k\bigg(\omega_1\cos\left(\frac{2\pi s}{t}\right) + \omega_2\sin\left(\frac{2\pi s}{t}\right)\bigg)\right\},
+\end{align}
+doubling the number of trapezoidal nodes $t$ until the error in the computed
+integral is less than $\epsilon$.
 
+If only low frequencies $\omega$ are desired, e.g. $\omega_{\text{max}} = 100$,
+the integrands are only mildly oscillatory and few trapezoidal nodes are
+required. In combination with the relative ease of amortizing costs in the
+NUFFT, the two-dimensional transform is often faster than the NUFHT. However,
+for larger $\omega_{\text{max}}$ the integrands become more oscillatory, and
+more nodes are needed in each dimension in order to resolve them. In such cases
+the fact that $\bO(m^2)$ quadrature nodes are needed in $\R^2$ becomes a
+bottleneck, and the necessary NUFFT becomes prohibitively large. 
+
+\red{Quadrature and timing figures}
+
+The curse of dimensionality demonstrated here only intensifies in higher
+dimensions, for which the requirement of $\bO(m^d)$ quadrature nodes is
+infeasible for even moderate $m$. In contrast, the NUFHT only ever requires
+one-dimensional quadrature, and is relatively robust to the distribution of
+$\omega_j$ and $r_k$, and to dimension for $d \leq 20$ or so. In even higher
+dimensions $d > 20$, the number of terms in the Hankel and Wimp expansions
+needed to maintain accurate evaluation increases, and the methods presented here
+become inefficient in practice, despite remaining asymptotically $\bO(n)$. There
+exist several alternative asymptotic expansions in this large $\nu$ regime which
+can be leveraged for fast evaluation of $J_\nu(z)$
+\citep[10.19]{heitman2015asymptotics, olver2010nist}. However, turning these
+asymptotics into a fast transform remains an open problem.

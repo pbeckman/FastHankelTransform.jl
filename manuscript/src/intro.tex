@@ -7,7 +7,7 @@ Discretizing this integral, we obtain the discrete Hankel transform (DHT)
 \begin{equation} \label{eq:DHT}
     g_j = \sum_{k=1}^m c_k J_\nu(\omega_j r_k)
 \end{equation}
-for $j=1, \dots, n$, which can be written equivalently as the matrix-vector
+for $j=1, \dots, n$, which can be written equivalently as a matrix-vector
 product with $\bm{A} \in \R^{n \times m}$
 \begin{equation}
     \bm{g} = \bm{A}\bm{c}, \qquad \bm{A}_{jk} = J_\nu(\omega_j r_k).
@@ -51,10 +51,10 @@ adaptive partitioning scheme which, for any choice of $r_k$ and $\omega_j$,
 subdivides $\bm{A}$ into blocks for which matrix-vector products can be
 evaluated efficiently. Second, we use the nonuniform fast Fourier transform
 (NUFFT) \citep{dutt1993fast, greengard2004accelerating} to evaluate asymptotic
-expansions for nonuniform $r_k$ and $\omega_j$. Finally, we introduce the
-low-rank expansion of \cite{wimp1962polynomial} in the local regime where
-asymptotic expansions are not applicable. We derive error bounds for this
-low-rank expansion, allowing us to choose all approximation parameters
-automatically through error analysis which guarantees that the resulting error
-is bounded by the user-specified tolerance $\epsilon$. 
+expansions for nonuniform $r_k$ and $\omega_j$. Finally, we utilize the low-rank
+expansion of \cite{wimp1962polynomial} in the local regime where asymptotic
+expansions are not applicable. We derive error bounds for this low-rank
+expansion, allowing us to choose all approximation parameters automatically
+through error analysis which guarantees that the resulting error is bounded by
+the user-specified tolerance $\epsilon$. 
 
