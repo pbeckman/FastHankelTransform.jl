@@ -2,19 +2,19 @@
 \subsection{Asymptotic expansion}
 
 The first $2M$ terms of Hankel's expansion for $z \to \infty$ are given by
-\begin{equation}
+\begin{align} \label{eq:asymptotic-expansion}
     J_\nu(z)
     \sim \sqrt{\frac{2}{\pi z}} \left( 
         \cos\left(\mu\right) \sum_{\ell=0}^{M-1} (-1)^\ell \frac{a_{2\ell}(\nu)}{z^{2\ell}}
         - \sin\left(\mu\right) \sum_{\ell=0}^{M-1} (-1)^\ell \frac{a_{2\ell+1}(\nu)}{z^{2\ell+1}}
         \right)
-\end{equation}
+\end{align}
 where $\mu := z - \frac{(2\nu+1)\pi}{4}$ and 
-\begin{equation}
+\begin{align}
     a_\ell(\nu) := \frac{(4\nu^2 - 1)(4\nu^2 - 3)\dots(4\nu^2 - (2\ell-1)^2)}{\ell! 8^\ell}.
-\end{equation}
+\end{align}
 
-\red{Matvec evaluation with the NUFFT}
+\red{Matvec evaluation with the NUFFT in $\bO\big(M(n + m\log m)\big)$ time}
 
 \red{Error bound}
 
@@ -23,31 +23,43 @@ where $\mu := z - \frac{(2\nu+1)\pi}{4}$ and
 If one looks at a rectangle $[0, \Omega] \times [0, R]$ where $\Omega R$ is
 sufficiently small, $J_\nu(\omega r)$ is approximately low-rank for all $\omega
 \in [0, \Omega], r \in [0, R]$. Fortuitously, one such low-rank approximation is
-available in closed form \cite{wimp1962polynomial}
+available in closed form \cite{wimp1962polynomial}. In the case that $\nu$ is
+even, we have
 \begin{align}
-    J_\nu(\omega r) = \sum_{\ell=0}^\infty \delta_\ell C_{2\ell}(\omega R) T_{2\ell}\left( \frac{r}{R} \right)
+    J_\nu(xy) 
+    &= \sum_{\ell=0}^\infty C_\ell(x) T_{2\ell}(y) \\
+    C_\ell(x) 
+    &= \delta_\ell J_{\frac{\nu}{2} + \ell}(x) \, J_{\frac{\nu}{2} - \ell}(x) \\
+    \delta_\ell 
+    &= \begin{cases}
+        1 & \ell=0 \\
+        2 & \text{otherwise}
+    \end{cases}
+    % J_{2\eta + 1}(\omega r) 
+    % &= \sum_{\ell=0}^\infty 2J_{\eta + \ell + 1}(\omega R) \, J_{\eta - \ell}(\omega R) \, T_{2\ell+1}\left( \frac{r}{R} \right)
 \end{align}
+for $\abs{y} \leq 1$. An analogous expansion exists for $\nu$ odd.
 
 \begin{lemma} \label{lem:wimp} Truncating the Wimp expansion after $L$ terms
     gives
-    \begin{equation}
-        \abs{J_\nu(\omega r) - \sum_{\ell=0}^L C_{2\ell}(\omega R) T_{2\ell}\left( \frac{r}{R} \right)} 
+    \begin{align}
+        \abs{J_\nu(\omega r) - \sum_{\ell=0}^L C_\ell(\omega R) T_{2\ell}\left( \frac{r}{R} \right)} 
         \leq \frac{2\exp\left\{ \frac{\nu}{2}(\beta - \gamma) + (L+1)(\beta + \gamma) \right\}}{1 - e^{\beta + \gamma}}
-    \end{equation}
+    \end{align}
     for all $\omega \in [0, \Omega], r \in [0, R]$, where
     \begin{align}
         \psi(p) &:= \log p + \sqrt{1 - p^2} - \log\left( 1 + \sqrt{1 - p^2} \right) \\
         \beta &:= \psi\left( \frac{\Omega R}{\nu + 2L + 2} \right) \\
         \gamma &:= \begin{cases}
             \psi\left( \frac{\Omega R}{2L + 2 - \nu} \right) & L + 1 \geq \frac{\nu}{2} \\
-            0 & \text{otherwise}
+            0 & \textnormal{otherwise}
         \end{cases}
     \end{align}
 \end{lemma}
 \begin{proof}
     For $\nu$ even, the truncation error after $L$ terms is bounded by
     \begin{align}
-        \abs{\sum_{\ell=L+1}^\infty C_{2\ell}(\omega R) T_{2\ell}\left( \frac{r}{R} \right)}
+        \abs{\sum_{\ell=L+1}^\infty C_\ell(\omega R) T_{2\ell}\left( \frac{r}{R} \right)}
         &\leq 2\sum_{\ell=L+1}^\infty \abs{J_{\frac{\nu}{2} + \ell}\left(\frac{\omega R}{2}\right)} \abs{J_{\frac{\nu}{2} - \ell}\left(\frac{\omega R}{2}\right)}.
     \end{align}
     Define $p_\ell(\omega) := \omega R / (\nu + 2\ell)$. Then by Siegel's bound
@@ -75,7 +87,7 @@ available in closed form \cite{wimp1962polynomial}
 
     All that remains is to apply a geometric series argument
     \begin{align}
-        \abs{J_\nu(\omega r) - \sum_{\ell=0}^L C_{2\ell}(\omega R) T_{2\ell}\left( \frac{r}{R} \right)}
+        \abs{J_\nu(\omega r) - \sum_{\ell=0}^L C_\ell(\omega R) T_{2\ell}\left( \frac{r}{R} \right)}
         &\leq 2\sum_{\ell=L+1}^\infty \exp\left\{ \Big(\frac{\nu}{2} + \ell\Big) \beta + \Big(\ell - \frac{\nu}{2}\Big) \gamma \right\} \\
         &= 2\exp\left\{\frac{\nu}{2}(\beta - \gamma)\right\} \sum_{\ell=L+1}^\infty \left( e^{\beta + \gamma} \right)^\ell \\
         &= \frac{2\exp\left\{ \frac{\nu}{2}(\beta - \gamma) + (L+1)(\beta + \gamma) \right\}}{1 - e^{\beta + \gamma}}
@@ -84,11 +96,13 @@ available in closed form \cite{wimp1962polynomial}
 \end{proof}
 
 This result is rather opaque regarding the impact of the various parameters
-because we have not utilized any bounds to simplify the function $\psi$.
+because we have not utilized any simplifying bounds on the function $\psi$.
 However, it remains relatively tight for $\nu = 0$ and is sufficient for our
 purposes, because given $z, L > 0$, Lemma \ref{lem:wimp} gives a bound on the
 pointwise error in approximating any block of the matrix $J_\nu(\omega_j r_k)$
-for which $\omega r \leq z$ using the $L$-term Wimp expansion.
+for which $\omega r \leq z$ using the $L$-term Wimp expansion. For a block of
+$\bm{A}$ of size $m_b \times n_b$, the low-rank approximation given by the Wimp
+expansion can be applied to a vector in $\bO\big(L(m_b + n_b)\big)$ time.
 
 \subsection{Determining the cutoff between expansions}
 
@@ -107,9 +121,9 @@ Therefore, for any order $\nu$ we can look up a pair of complementary local and
 asymptotic expansions with error everywhere bounded by the requested tolerance
 $\epsilon$. The only remaining free parameter is the number of asymptotic terms
 $M$. This parameter is selected heuristically in our implementation as 
-\begin{equation}
+\begin{align}
     M = \min\left(\flr{1 + \frac{\nu}{5} - \frac{\log_{10}(\epsilon)}{4}}, 20\right)
-\end{equation}
+\end{align}
 according to numerical experiments which maximize speed by balancing the cost of
 the local, asymptotic, and direct evaluations.
 
@@ -118,42 +132,65 @@ the local, asymptotic, and direct evaluations.
 Having established error bounds which allow us to automatically select the
 number of asymptotic terms $M$, local terms $L$, and crossover point $z$ given a
 tolerance $\epsilon$ and order $\nu$, we now discuss how to subdivide the matrix
-$\bm{A}$ into three sets of blocks, each of which can be efficiently evaluated
-as described above
-\begin{itemize}
-    \item Asymptotic blocks $\mathscr{A} = \big\{ (J, K) : \omega_j r_k > z \
-    \forall \ j \in J, \ k \in K \big\}$
-    \item Local blocks $\mathscr{L} = \big\{ (J, K) : \omega_j r_k \leq z \
-    \forall \ j \in J, \ k \in K \big\}$
+$\bm{A}$ into three sets of blocks, each of which can be efficiently applied to
+a vector as described above:
+\begin{list}{$\circ$}{}
+    \item Local blocks $\mathscr{L} = \big\{ (j_0:j_1, k_0:k_1) \ | \ \omega_j
+    r_k \leq z \ \forall \ j_0 \leq j \leq j_1, \ k_0 \leq k \leq k_1 \big\}$
+    \item Asymptotic blocks $\mathscr{A} = \big\{ (j_0:j_1, k_0:k_1) \ | \
+    \omega_j r_k > z \ \forall \ j_0 \leq j \leq j_1, \ k_0 \leq k \leq k_1
+    \big\}$
     \item Direct blocks $\mathscr{D}$ which are small enough that no fast
     expansion is needed
-\end{itemize}
-The idea is to consider index pairs $(j,k)$ such that $\omega_j r_k \approx z$,
-which divides the matrix so that the upper left block can be applied using the
-local expansion, the lower right block using the asymptotic expansion, and the
-remaining two blocks can be evaluated directly or hierarchically subdivided.
-This method converges for any such choice of $(j,k)$, but for efficiency they
-are chosen to maximize the number of matrix entries which can be applied using a
-fast expansion.
+\end{list}
+In order to determine a subdivision of $\bm{A}$ into blocks of these three
+types, we initialize a set of \textit{mixed} blocks $\mathscr{M} = \{(1:m,
+1:n)\}$, which contains a mix of local and asymptotic entries. We then chose an
+index pair $(j,k)$ such that $\omega_j r_k \approx z$. This index subdivides the
+block into four new sub-blocks with $(j,k)$ at the center, so that the upper
+left block can be applied using the local expansion and is appended to
+$\mathscr{L}$, the lower right block using the asymptotic expansion and is
+appended to $\mathscr{A}$. 
 
-We start by initializing $\mathscr{A} = \mathscr{L} = \{\}$ and $\mathscr{D} =
-\{(1:m, 1:n)\}$. The algorithm then proceeds iteratively as follows for each box
-$(j_0:j_1, k_0:k_1) \in \mathscr{D}$
-\begin{itemize}
-    \item Compute $(j,k)$ which solves
-    \begin{align}
-        \text{maximize} &\quad (j-j_0)(k_1-k) + (j_1-j)(k-k_0) \\
-        \text{such that} &\quad j_0 \leq j \leq j_1 \nonumber \\ 
-        &\quad k_0 \leq k \leq k_1 \nonumber \\ 
-        &\quad \omega_j r_k \leq z \nonumber
-    \end{align}
-    \item Remove $(j_0:j_1, k_0:k_1)$ from $\mathscr{D}$
-    \item Add $(j+1:j_1, k+1:k_1)$ to $\mathscr{A}$ 
-    \item Add $(j_0:j, k_0:k)$ to $\mathscr{L}$ 
-    \item Add $(j_0:j, k+1:k_1)$ and $(j+1:j_1, k_0:k)$ to $\mathscr{D}$ 
-\end{itemize}
-We repeat the above subdivision scheme until all remaining boxes in
-$\mathscr{D}$ are small enough to be evaluated directly.
+The remaining lower left and upper right blocks each still contain a mix of
+local and asymptotic entries. If they are of sufficiently small size $m_b \times
+n_b$ with $m_b n_b < \texttt{min\_size} := 1024$, they can be evaluated directly
+and are appended to $\mathscr{D}$. Otherwise they are appended back to
+$\mathscr{M}$, and we continue the subdivision process recursively. 
+
+This method yields a valid partition for any choice of $(j,k)$, but for
+efficiency these indices are chosen to maximize the number of matrix entries
+which can be applied using a fast expansion, i.e. the sizes of the upper left
+and lower right blocks. This is done by solving the following constrained
+optimization problem
+\begin{align}
+    (j,k) 
+    &\ = \textsc{SplitIndices}(r_1,\dots,r_n, \omega_1,\dots,\omega_m, z) \\
+    &:= \left\{
+        \begin{array}{r@{\quad } l}
+        \text{argmax} & (j-j_0)(k_1-k) + (j_1-j)(k-k_0)   \\
+        \text{subject to} & j_0 \leq j \leq j_1 \\ 
+        & k_0 \leq k \leq k_1 \\ 
+        & \omega_j r_k \leq z
+        \end{array}
+    \right. \label{eq:subdiv-optim}
+\end{align}
+This problem can be solved exactly in \red{$\bO(j_1 - j_0 + k_1 - k_0)$?} time
+using \red{bisection?}. However, computing the exact optimal splitting indices
+for every box gives a negligible speedup overall compared to a simpler,
+quasi-optimal scheme. In practice it is sufficient to choose a small number of
+equispaced indices $j \in j_0:j_1$, compute the corresponding $k = \argmax \{k \
+| \ r_k \leq \frac{z}{\omega_j}\}$ for each $j$, and choose $(j,k)$ as the pair
+which minimizes the objective function of (\ref{eq:subdiv-optim}) among this
+small collection.
+
+\begin{algorithm}[t]
+    \include{src/subdiv-algo.tex}
+\end{algorithm}
+
+\begin{algorithm}[t]
+    \include{src/nufht-algo.tex}
+\end{algorithm}
 
 \begin{figure}
     \centering
@@ -170,9 +207,65 @@ $\mathscr{D}$ are small enough to be evaluated directly.
 
 \subsection{Computational complexity}
 
-If $\omega_j r_k \leq z$ for all $j=1,\dots,n$ and $k=1,\dots,m$ then only the
-low-rank local expansion is used, resulting in $\bO(m + n)$ complexity. If
-instead $\omega_j r_k > z$ everywhere, then only the asymptotic expansion is
-used, giving $\bO(m + n\log n)$ complexity. The third case, in which $\bm{A}$ is
-subdivided in a non-trivial way, is more nuanced. \red{Complexity analysis for
-subdivided case}
+We now analyze the computational complexity of the proposed approach. In order
+to do so, we must first comment on the complexity of the NUFFT, which is an
+important subroutine in our method. Nearly all analysis-based NUFFT codes ---
+including the FINUFFT library \cite{barnett2019parallel} which we use in our
+NUFHT implementation --- consist of three steps. First, delta masses centered at
+each non-uniform point are convolved with a \textit{spreading function} which
+smears them onto a fine $N$-point uniform grid. Then, a standard equispaced FFT
+is computed on the fine grid. Finally, a diagonal de-convolution with the
+Fourier transform of the spreading function is applied to reverse the effect of
+the original smearing. For a more complete description of the NUFFT, see
+\todocite. For $n$ locations $r_k$ and $m$ frequencies $\omega_j$, the dominant
+costs in the NUFFT are... \red{explain spreading and FFT costs, why fine grid
+size $N$ scales like $\bO(n)$ for type-I, $\bO(m)$ for type-II, and like the
+space-frequency product $\bO(\Omega R)$ for type-III.}
+
+\begin{theorem}
+    Let $\omega_1,\dots,\omega_m \in [0,1]$ and $r_1,\dots,r_n \in [0,n]$. Then
+    the computational cost of computing the NUFHT to tolerance $\epsilon$ at $n$
+    frequencies from $m$ distances with local expansion order $L$ and asymptotic
+    expansion order $M$ is $\bO\Big((L + M)(m + n\log n) \log \min(n,m) \Big)$.
+\end{theorem}
+
+\begin{proof}
+    If $\omega_j r_k \leq z$ for all $j=1,\dots,n$ and $k=1,\dots,m$ then only
+    the low-rank local expansion is used, resulting in $\bO(Lm + Ln)$
+    complexity. If instead $\omega_j r_k > z$ everywhere, then only the
+    asymptotic expansion is used, giving $\bO(Mm + Mn\log n)$ complexity.
+
+    Otherwise, consider the case where $\bm{A}$ contains both local and
+    asymptotic entries. After step $\ell$ of subdividing every mixed block, we
+    obtain $2^{\ell}$ new mixed blocks, $2^{\ell-1}$ new local blocks, and
+    $2^{\ell-1}$ new asymptotic blocks. Let the local blocks be of size
+    $m_{\ell,b} \times n_{\ell,b}$ for $b = 1,\dots,2^{\ell-1}$. Then
+    $\sum_{b=1}^{2^{\ell-1}} m_{\ell,b} = m$ and $\sum_{b=1}^{2^{\ell-1}}
+    n_{\ell,b} = n$. An analogous fact holds for the asymptotic blocks. The number of levels $N_\ell$ scales like $\log\min(n,m)$. Then the
+    total cost of local evaluation is 
+    \begin{align}
+        \sum_{\ell=1}^{N_\ell} \sum_{b=1}^{2^{\ell-1}} \bO\left(Lm_{\ell,b}^{(\text{loc})} + Ln_{\ell,b}^{(\text{loc})}\right)
+        &= \sum_{\ell=1}^{N_\ell} \bO\left(Lm + Ln\right) \\
+        &= \bO\Big(L(m + n) \log \min(n,m)\Big).
+    \end{align}
+    For a set of positive integers $n_b$ such that $\sum_b n_b = n$, by
+    H\"older's inequality we obtain
+    \begin{align}
+        \sum_{b} n_b \log n_b 
+        \leq \left( \sum_{b} n_b \right) \left(\max_b \log n_b\right)
+        \leq n \log n.
+    \end{align}
+    Therefore the total cost of asymptotic evaluation is
+    \begin{align}
+        \sum_{\ell=1}^{N_\ell} \sum_{b=1}^{2^{\ell-1}} \bO\left(Mm_{\ell,b}^{(\text{asy})} + Mn_{\ell,b}^{(\text{asy})} \log n_{\ell,b}^{(\text{asy})}\right)
+        &= \sum_{\ell=1}^{N_\ell} \bO\left(Mm + Mn \log n\right) \\
+        &= \bO\Big(M(m + n\log n) \log \min(n,m) \Big).
+    \end{align}
+    We subdivide until all direct blocks are all of size $m_b \times n_b$ with
+    $m_bn_b = \bO(1)$. Thus the cost of computing the dense matvec with each
+    direct block is $\bO(1)$, and the number of direct blocks is $\bO(m + n)$.
+    Therefore the total direct evaluation cost is $\bO(m + n)$. Summing the cost of local, asymptotic, and direct evaluation gives the result.
+\end{proof}
+
+Note that if we treat the expansion orders $L$ and $M$ as constants and consider
+the square case $n=m$, this complexity simplifies to $\bO(n\log^2n)$, which agrees with the special cases studied in \cite{townsend2015fast} up to a factor of $\log\log n$, but is applicable to fully nonuniform $\omega_j$ and $r_k$.

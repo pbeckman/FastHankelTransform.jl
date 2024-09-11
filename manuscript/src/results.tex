@@ -3,14 +3,18 @@
 \red{Scaling and accuracy tests against direct evaluation}
 
 \subsection{Computing Fourier transforms of radial functions}
+
 For radial functions $f(\bm{r}) = f(\norm{\bm{r}})$ in $\R^d$, one can integrate
 out the radial variables analytically, reducing the $d$-dimensional Fourier
 integral to a single Hankel transform
-\begin{align}
+\begin{align} \label{eq:radial-fourier}
     \hat{f}(\bm{\omega}) 
     = \int_{\R^d} f(\norm{\bm{r}}) e^{i\bm{\omega}^\top \bm{r}} \dif{\bm{r}}
     = \frac{(2\pi)^{\frac{d}{2}}}{\omega^{\frac{d}{2} - 1}} \int_0^\infty f(r) J_{\frac{d}{2} - 1}(\omega r) r^{\frac{d}{2}} \dif{r}.
 \end{align}
+
+\subsubsection{Two dimensions}
+
 We compare two methods of computing $\hat{f}$ for the indicator function of the
 unit disk $f(r) = \ind{0 \leq r \leq 1}$ to absolute error $\epsilon = 10^{-12}$
 at $n$ equispaced points $\omega_j \in [0, \omega_{\text{max}}]$. First, we use
@@ -23,13 +27,13 @@ We utilize the NUFHT to compute the resulting sum
 \end{align}
 doubling the number of nodes $m$ until the error in the computed integral is
 less than $\epsilon$. Second, we use a tensor product quadrature rule in polar
-coordinates. We use the same $m$-point Gauss-Legendre rule in $r$ and a
+coordinates, using the same $m$-point Gauss-Legendre rule in $r$ and a
 trapezoidal rule in $\theta$. We utilize the NUFFT to compute the resulting
 double sum
 \begin{align}
   \hat{f}(\omega) 
-  &= \int_0^{2\pi} \int_0^1 e^{ir(\omega_1\cos\theta + \omega_2\sin\theta)} r \dif{r} \dif{\theta} \\
-  &\approx \frac{2\pi}{t} \sum_{k=1}^{m} \sum_{s=1}^{t} w_k r_k \exp\left\{ir_k\bigg(\omega_1\cos\left(\frac{2\pi s}{t}\right) + \omega_2\sin\left(\frac{2\pi s}{t}\right)\bigg)\right\},
+  = \int_0^{2\pi} \int_0^1 e^{i\omega r\cos\theta} r \dif{r} \dif{\theta}
+  \approx \frac{2\pi}{t} \sum_{k=1}^{m} \sum_{s=1}^{t} w_k r_k \exp\left\{i\omega r_k\cos\left(\frac{2\pi s}{t}\right)\right\},
 \end{align}
 doubling the number of trapezoidal nodes $t$ until the error in the computed
 integral is less than $\epsilon$.
@@ -45,15 +49,37 @@ bottleneck, and the necessary NUFFT becomes prohibitively large.
 
 \red{Quadrature and timing figures}
 
-The curse of dimensionality demonstrated here only intensifies in higher
-dimensions, for which the requirement of $\bO(m^d)$ quadrature nodes is
-infeasible for even moderate $m$. In contrast, the NUFHT only ever requires
-one-dimensional quadrature, and is relatively robust to the distribution of
-$\omega_j$ and $r_k$, and to dimension for $d \leq 20$ or so. In even higher
-dimensions $d > 20$, the number of terms in the Hankel and Wimp expansions
-needed to maintain accurate evaluation increases, and the methods presented here
-become inefficient in practice, despite remaining asymptotically $\bO(n)$. There
-exist several alternative asymptotic expansions in this large $\nu$ regime which
-can be leveraged for fast evaluation of $J_\nu(z)$
-\citep[10.19]{heitman2015asymptotics, olver2010nist}. However, turning these
-asymptotics into a fast transform remains an open problem.
+\subsubsection{Higher dimenions}
+
+Using spherical Bessel function identities \cite[10.47.3,
+10.49.2]{olver2010nist}, one can see that for half-integer $\nu$, Hankel's
+expansion (\ref{eq:asymptotic-expansion}) is no longer just an asymptotic
+expansion, but an exact formula.
+% \begin{align} J_{\frac{d}{2}-1}(z) &= \sqrt{\frac{2z}{\pi}}
+%   j_{\frac{d-3}{2}}(z) \\
+%   &= \sqrt{\frac{2}{\pi z}} \left( \cos\left(\mu\right) \sum_{\ell=0}^{M-1}
+%     (-1)^\ell \frac{a_{2\ell}\left(\frac{d}{2}-1\right)}{z^{2\ell}} -
+%     \sin\left(\mu\right) \sum_{\ell=0}^{M-1} (-1)^\ell
+%     \frac{a_{2\ell+1}\left(\frac{d}{2}-1\right)}{z^{2\ell+1}} \right)
+%     \end{align} where $\mu := z - \frac{(2\nu+1)\pi}{4}$. 
+For example, the kernel of the integral transform in (\ref{eq:radial-fourier})
+for $d = 3$ is
+\begin{align}
+  J_{\frac{1}{2}}(z) = \sqrt{\frac{2}{\pi z}} \sin(z),
+\end{align}
+and the corresponding NUFHT can be evaluated using a single NUFFT.
+
+The curse of dimensionality demonstrated in the two-dimensional case only
+intensifies in higher dimensions, for which the requirement of $\bO(m^d)$
+quadrature nodes is infeasible for even small $m$. In contrast, the NUFHT only
+ever requires one-dimensional quadrature, and is relatively robust to the
+distribution of $\omega_j$ and $r_k$, and to dimension for $d \leq 20$ or so. In
+even higher dimensions $d > 20$, the number of terms in the Hankel and Wimp
+expansions needed to maintain accurate evaluation increases, and the methods
+presented here become inefficient in practice, despite retaining their
+quasilinear asymptotic complexity. There exist several alternative asymptotic
+expansions in this large $\nu$ regime which can be leveraged for fast evaluation
+of $J_\nu(z)$ \citep[10.19]{heitman2015asymptotics, olver2010nist}. However, the
+terms in these asymptotics are not sinusoids which can be efficiently evaluated
+with the NUFFT, and thus turning them into an analysis-based fast transform
+remains an open problem.
