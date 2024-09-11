@@ -13,29 +13,29 @@ product with $\bm{A} \in \R^{m \times n}$
     \bm{g} = \bm{A}\bm{c}, \qquad \bm{A}_{jk} = J_\nu(\omega_j r_k).
 \end{equation}
 These transforms appear in a wide range of applications including
-imaging~\citep{higgins1988hankel, zhao2013fourier}, partial differential
-equations~\citep{bisseling1985fast,ali1999generalized}, and
-statistics~\citep{lord1954a, genton2002nonparametric}. In many such
+imaging~\cite{higgins1988hankel, zhao2013fourier}, partial differential
+equations~\cite{bisseling1985fast,ali1999generalized}, and
+statistics~\cite{lord1954a, genton2002nonparametric}. In many such
 applications, a fully nonuniform DHT is desired, as the relevant frequencies
 $\omega_j$ may not be equispaced, and the most efficient quadrature rule for
 discretizing (\ref{eq:HT}) may have nodes $r_k$ which are also not equispaced.
 
 A number of methods exist in the literature to evaluate (\ref{eq:HT}) and
 (\ref{eq:DHT}). These include series expansion methods
-\citep{lord1954b,brunol1977fourier,cavanagh1979numerical}, convolutional
-approaches \citep{siegman1977quasi, johansen1979fast, mook1983algorithm}, and
+\cite{lord1954b,brunol1977fourier,cavanagh1979numerical}, convolutional
+approaches \cite{siegman1977quasi, johansen1979fast, mook1983algorithm}, and
 projection-slice or Abel transform-based methods
-\citep{oppenheim1980computation, hansen1985fast, kapur1995algorithm}.
+\cite{oppenheim1980computation, hansen1985fast, kapur1995algorithm}.
 See~\cite{cree1993algorithms} for a review of many of these early computational
 approaches. Unfortunately, these existing methods are either not applicable to
 the discrete case, require a particular choice of $\omega_j$ or $r_k$ due to the
 constraints of interpolation or quadrature subroutines, or suffer from low
 accuracy as a result of intermediate approximations. Therefore, extending these
 schemes to compute the fully nonuniform DHT with controllable accuracy is not
-straightforward. 
+straightforward.
 
-More recently, butterfly algorithms \citep{oneil2010algorithm, li2015butterfly,
-pang2020interpolative} were introduced as a broadly applicable methodology for
+More recently, butterfly algorithms \cite{oneil2010algorithm, li2015butterfly,
+  pang2020interpolative} were introduced as a broadly applicable methodology for
 rapidly computing oscillatory transforms including the nonuniform DHT. However,
 these algorithms require a precomputation or factorization stage for each new
 set of $\omega_j$ and $r_k$, which can be a bottleneck for applications in which
@@ -51,11 +51,11 @@ We describe here a precomputation-free fully nonuniform fast Hankel transform
 employ an adaptive partitioning scheme which, for any choice of $r_k$ and
 $\omega_j$, subdivides $\bm{A}$ into blocks for which matrix-vector products can
 be evaluated efficiently. Second, we use the nonuniform fast Fourier transform
-(NUFFT) \citep{dutt1993fast, greengard2004accelerating} to evaluate asymptotic
+(NUFFT)~\cite{dutt1993fast, greengard2004accelerating} to evaluate asymptotic
 expansions for nonuniform $r_k$ and $\omega_j$. Finally, we utilize the low-rank
 expansion of $J_\nu$ given by \cite{wimp1962polynomial} in the local regime
 where asymptotic expansions are not applicable. We derive error bounds for this
 low-rank expansion, allowing us to choose all approximation parameters
 automatically by analysis which guarantees that the resulting error is bounded
-by the user-specified tolerance $\epsilon$. 
+by the user-specified tolerance $\epsilon$.
 
