@@ -95,28 +95,28 @@ for $\abs{y} \leq 1$. An analogous expansion exists for $\nu$ odd.
     A similar calculation can be carried out for $\nu$ odd.
 \end{proof}
 
-This result is rather opaque regarding the impact of the various parameters
-because we have not utilized any simplifying bounds on the function $\psi$.
-However, it remains relatively tight for $\nu = 0$ and is sufficient for our
-purposes, because given $z, L > 0$, Lemma \ref{lem:wimp} gives a bound on the
-pointwise error in approximating any block of the matrix $J_\nu(\omega_j r_k)$
-for which $\omega r \leq z$ using the $L$-term Wimp expansion. For a block of
-$\bm{A}$ of size $m_b \times n_b$, the low-rank approximation given by the Wimp
-expansion can be applied to a vector in $\bO\big(L(m_b + n_b)\big)$ time.
+Lemma \ref{lem:wimp} is rather opaque regarding the impact of the various
+parameters because we have not utilized any simplifying bounds on the function
+$\psi$. However, it remains relatively tight for $\nu = 0$ and is sufficient for
+our purposes, because given $z, L > 0$, it gives a bound on the pointwise error
+in approximating any block of the matrix $J_\nu(\omega_j r_k)$ for which $\omega
+r \leq z$ using the $L$-term Wimp expansion. For a block of $\bm{A}$ of size
+$m_b \times n_b$, the low-rank approximation given by the Wimp expansion can be
+applied to a vector in $\bO\big(L(m_b + n_b)\big)$ time.
 
 \subsection{Determining the cutoff between expansions}
 
 With these error bounds in hand, we precompute the following tables for
 tolerances $\epsilon = \texttt{1e-4}, \dots, \texttt{1e-15}$, orders $\nu = 1,
 \dots, 100$, and number of asymptotic expansion terms $M = 1, \dots, 20$
-\begin{itemize}
+\begin{list}{$\circ$}{}
     \item $z_{\nu, \epsilon}^M$ such that the $M$-term asymptotic expansion of
     $J_\nu(\omega r)$ is $\epsilon$-accurate for all $\omega r > z_{\nu,
     \epsilon}^M$
     \item $L_{\nu, \epsilon}^M$ such that the $L_{\nu, \epsilon}^M$-term Wimp
     expansion of $J_\nu(\omega r)$ is $\epsilon$-accurate for all $\omega r \leq
     z_{\nu, \epsilon}^M$
-\end{itemize}
+\end{list}
 Therefore, for any order $\nu$ we can look up a pair of complementary local and
 asymptotic expansions with error everywhere bounded by the requested tolerance
 $\epsilon$. The only remaining free parameter is the number of asymptotic terms
