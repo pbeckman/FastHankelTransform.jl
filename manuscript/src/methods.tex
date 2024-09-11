@@ -121,7 +121,7 @@ Therefore, for any order $\nu$ we can look up a pair of complementary local and
 asymptotic expansions with error everywhere bounded by the requested tolerance
 $\epsilon$. The only remaining free parameter is the number of asymptotic terms
 $M$. This parameter is selected heuristically in our implementation as 
-\begin{align}
+\begin{align} \label{eq:num-asy-terms}
     M = \min\left(\flr{1 + \frac{\nu}{5} - \frac{\log_{10}(\epsilon)}{4}}, 20\right)
 \end{align}
 according to numerical experiments which maximize speed by balancing the cost of
@@ -185,10 +185,13 @@ which minimizes the objective function of (\ref{eq:subdiv-optim}) among this
 small collection.
 
 \begin{algorithm}[t]
+    \caption{Block subdivision of Hankel transform
+    matrix}\label{alg:subdivision}
     \include{src/subdiv-algo.tex}
 \end{algorithm}
 
 \begin{algorithm}[t]
+    \caption{Nonuniform fast Hankel transform}\label{alg:nufht}
     \include{src/nufht-algo.tex}
 \end{algorithm}
 
@@ -224,16 +227,15 @@ space-frequency product $\bO(\Omega R)$ for type-III.}
 
 \begin{theorem}
     Let $\omega_1,\dots,\omega_m \in [0,1]$ and $r_1,\dots,r_n \in [0,n]$. Then
-    the computational cost of computing the NUFHT to tolerance $\epsilon$ at $n$
-    frequencies from $m$ distances with local expansion order $L$ and asymptotic
-    expansion order $M$ is $\bO\Big((L + M)(m + n\log n) \log \min(n,m) \Big)$.
+    the computational cost of computing the NUFHT to tolerance $\epsilon$ using
+    Algorithm \ref{alg:nufht} is $\bO\big((m + n\log n) \log \min(n,m) \big)$.
 \end{theorem}
 
 \begin{proof}
     If $\omega_j r_k \leq z$ for all $j=1,\dots,n$ and $k=1,\dots,m$ then only
-    the low-rank local expansion is used, resulting in $\bO(Lm + Ln)$
-    complexity. If instead $\omega_j r_k > z$ everywhere, then only the
-    asymptotic expansion is used, giving $\bO(Mm + Mn\log n)$ complexity.
+    the low-rank local expansion is used, resulting in $\bO(m + n)$ complexity.
+    If instead $\omega_j r_k > z$ everywhere, then only the asymptotic expansion
+    is used, giving $\bO(m + n\log n)$ complexity.
 
     Otherwise, consider the case where $\bm{A}$ contains both local and
     asymptotic entries. After step $\ell$ of subdividing every mixed block, we
@@ -241,12 +243,13 @@ space-frequency product $\bO(\Omega R)$ for type-III.}
     $2^{\ell-1}$ new asymptotic blocks. Let the local blocks be of size
     $m_{\ell,b} \times n_{\ell,b}$ for $b = 1,\dots,2^{\ell-1}$. Then
     $\sum_{b=1}^{2^{\ell-1}} m_{\ell,b} = m$ and $\sum_{b=1}^{2^{\ell-1}}
-    n_{\ell,b} = n$. An analogous fact holds for the asymptotic blocks. The number of levels $N_\ell$ scales like $\log\min(n,m)$. Then the
-    total cost of local evaluation is 
+    n_{\ell,b} = n$. An analogous fact holds for the asymptotic blocks. The
+    number of levels $N_\ell$ scales like $\log\min(n,m)$. Then the total cost
+    of local evaluation is 
     \begin{align}
-        \sum_{\ell=1}^{N_\ell} \sum_{b=1}^{2^{\ell-1}} \bO\left(Lm_{\ell,b}^{(\text{loc})} + Ln_{\ell,b}^{(\text{loc})}\right)
-        &= \sum_{\ell=1}^{N_\ell} \bO\left(Lm + Ln\right) \\
-        &= \bO\Big(L(m + n) \log \min(n,m)\Big).
+        \sum_{\ell=1}^{N_\ell} \sum_{b=1}^{2^{\ell-1}} \bO\left(m_{\ell,b}^{(\text{loc})} + n_{\ell,b}^{(\text{loc})}\right)
+        &= \sum_{\ell=1}^{N_\ell} \bO\left(m + n\right) \\
+        &= \bO\big((m + n) \log \min(n,m)\big).
     \end{align}
     For a set of positive integers $n_b$ such that $\sum_b n_b = n$, by
     H\"older's inequality we obtain
@@ -257,15 +260,18 @@ space-frequency product $\bO(\Omega R)$ for type-III.}
     \end{align}
     Therefore the total cost of asymptotic evaluation is
     \begin{align}
-        \sum_{\ell=1}^{N_\ell} \sum_{b=1}^{2^{\ell-1}} \bO\left(Mm_{\ell,b}^{(\text{asy})} + Mn_{\ell,b}^{(\text{asy})} \log n_{\ell,b}^{(\text{asy})}\right)
-        &= \sum_{\ell=1}^{N_\ell} \bO\left(Mm + Mn \log n\right) \\
-        &= \bO\Big(M(m + n\log n) \log \min(n,m) \Big).
+        \sum_{\ell=1}^{N_\ell} \sum_{b=1}^{2^{\ell-1}} \bO\left(m_{\ell,b}^{(\text{asy})} + n_{\ell,b}^{(\text{asy})} \log n_{\ell,b}^{(\text{asy})}\right)
+        &= \sum_{\ell=1}^{N_\ell} \bO\left(m + n \log n\right) \\
+        &= \bO\big((m + n\log n) \log \min(n,m) \big).
     \end{align}
     We subdivide until all direct blocks are all of size $m_b \times n_b$ with
     $m_bn_b = \bO(1)$. Thus the cost of computing the dense matvec with each
     direct block is $\bO(1)$, and the number of direct blocks is $\bO(m + n)$.
-    Therefore the total direct evaluation cost is $\bO(m + n)$. Summing the cost of local, asymptotic, and direct evaluation gives the result.
+    Therefore the total direct evaluation cost is $\bO(m + n)$. Summing the cost
+    of local, asymptotic, and direct evaluation gives the result.
 \end{proof}
 
-Note that if we treat the expansion orders $L$ and $M$ as constants and consider
-the square case $n=m$, this complexity simplifies to $\bO(n\log^2n)$, which agrees with the special cases studied in \cite{townsend2015fast} up to a factor of $\log\log n$, but is applicable to fully nonuniform $\omega_j$ and $r_k$.
+Note that in the square case $n=m$ the complexity simplifies to $\bO(n\log^2n)$,
+which agrees with the special cases studied in \cite{townsend2015fast} up to a
+factor of $\log\log n$, but our method is applicable to fully nonuniform
+$\omega_j$ and $r_k$.
