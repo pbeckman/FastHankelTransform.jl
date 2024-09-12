@@ -1,3 +1,19 @@
+fourier bessel transform from fourier transform as motivating example, show the
+calculation for various ambient dimensions for radially symmetric functions
+(allude to translation invariance and problems in statistics, cryo-em)
+
+highlight other styles of fourier bessel transforms: varying n, schlomich, eval
+expansions, etc.
+
+draw analoge to discrete setting, i.e. a quadrature discretization or function
+evaluation problem
+
+
+
+
+
+
+
 The Hankel or Fourier-Bessel transform of order $\nu$ of a function $f : (0,
 \infty) \to \C$ is given by
 \begin{equation} \label{eq:HT}
@@ -19,6 +35,15 @@ statistics~\cite{lord1954a, genton2002nonparametric}. In many such
 applications, a fully nonuniform DHT is desired, as the relevant frequencies
 $\omega_j$ may not be equispaced, and the most efficient quadrature rule for
 discretizing (\ref{eq:HT}) may have nodes $r_k$ which are also not equispaced.
+
+\paragraph{Existing methods}
+
+see existing paper, and those in
+
+asdf
+asd
+
+
 
 A number of methods exist in the literature to evaluate (\ref{eq:HT}) and
 (\ref{eq:DHT}). These include series expansion methods
@@ -46,6 +71,10 @@ equispaced FFT. The resulting scheme is applicable to equispaced or perturbed
 ``quasi-equispaced'' grids, for example $j_{0,k} / j_{0,n+1}$ where $j_{\nu,k}$
 is the $k^{th}$ zero of $J_\nu$.
 
+
+\paragraph{Novelty of this work}
+
+
 We describe here a precomputation-free fully nonuniform fast Hankel transform
 (NUFHT) which generalizes~\cite{townsend2015fast} in a number of ways. First, we
 employ an adaptive partitioning scheme which, for any choice of $r_k$ and
@@ -59,3 +88,14 @@ low-rank expansion, allowing us to choose all approximation parameters
 automatically by analysis which guarantees that the resulting error is bounded
 by the user-specified tolerance $\epsilon$.
 
+
+
+\paragraph{Outline of the paper}
+
+asdfasd
+f
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "../main"
+%%% End:

@@ -120,34 +120,14 @@ Hankel transform, fast Fourier transform, asymptotic expansion, Bessel function
 XXXX, XXXX, XXXX
 \end{MSCcodes}
 
-{\color{red}
-  
-\section{Introduction}
-\label{sec:intro}
-
-fourier bessel transform from fourier transform as motivating example, show the
-calculation for various ambient dimensions for radially symmetric functions
-(allude to translation invariance and problems in statistics, cryo-em)
-
-highlight other styles of fourier bessel transforms: varying n, schlomich, eval
-expansions, etc.
-
-draw analoge to discrete setting, i.e. a quadrature discretization or function
-evaluation problem
-
-\paragraph{Existing methods}
-
-see existing paper, and those in
-
-asdf
-asd
 
 
-\paragraph{Outline of the paper}
 
-asdfasd
-f
 
+
+
+\section{Introduction} 
+\input{./src/intro.tex}
 
 
 \section{Overview of the algorithm}
@@ -157,30 +137,18 @@ Show matrix arising from DHT, draw bands, say what happens in each region: local
 expansion, direct, asymptotic, and why the local expansion can be accelerated
 
 
-
 \section{Bessel function approximations}
 \label{sec:approx}
-
-asdf
-
-\subsection{The Wimp expansion}
-\label{sec:local}
-
-asdf
-
-\subsection{Hankel's expansion}
-\label{sec:asymptotic}
-asdf
-
-\subsection{Expansion orders}
-\label{sec:cutoff}
-
-Explain how to compute cutoff tolerances, and in what error norm
+\input{./src/approx.tex}
 
 
+\section{Methods} \label{sec:methods}
+\input{./src/methods.tex}
 
 
-\section{The Nonuniform Fast Hankel Transform}
+{\color{red}
+
+  \section{The Nonuniform Fast Hankel Transform}
 \label{sec:nufht}
 
 asdf
@@ -195,20 +163,7 @@ asdf
 \label{sec:complexity}
 
 asdf
-
 }
-
-
-
-
-
-
-
-\section{Introduction} 
-\input{./src/intro.tex}
-
-\section{Methods} \label{sec:methods}
-\input{./src/methods.tex}
 
 \section{Numerical examples}
 \label{sec:results}
