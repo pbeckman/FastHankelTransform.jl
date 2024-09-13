@@ -109,12 +109,14 @@ size $N$ scales like $\bO(n)$ for type-I, $\bO(m)$ for type-II, and like the
 space-frequency product $\bO(\Omega R)$ for type-III.}
 
 \begin{theorem}
-    Let $\omega_1,\dots,\omega_m \in [0,1]$ and $r_1,\dots,r_n \in [0,n]$. Then
+    Let $\omega_1,\dots,\omega_m \in [0,m]$ and $r_1,\dots,r_n \in [0,R]$ for some fixed $R$. Then
     the computational cost of computing the NUFHT to tolerance $\epsilon$ using
     Algorithm \ref{alg:nufht} is $\bO\big((m + n\log n) \log \min(n,m) \big)$.
 \end{theorem}
 
 \begin{proof}
+    As the space-frequency product is $\bO(m)$ by assumption, the complexity of 
+
     If $\omega_j r_k \leq z$ for all $j=1,\dots,n$ and $k=1,\dots,m$ then only
     the low-rank local expansion is used, resulting in $\bO(m + n)$ complexity.
     If instead $\omega_j r_k > z$ everywhere, then only the asymptotic expansion
@@ -158,3 +160,7 @@ Note that in the square case $n=m$ the complexity simplifies to $\bO(n\log^2n)$,
 which agrees with the special cases studied in \cite{townsend2015fast} up to a
 factor of $\log\log n$, but our method is applicable to fully nonuniform
 $\omega_j$ and $r_k$.
+
+\begin{remark}
+    For local blocks away from the origin, one can prove that the $\epsilon$-rank of blocks of $\bm{A}$ is actually significantly lower than the $L$ used in the Wimp expansion due to the complementary low-rank or butterfly property of the Hankel transform. However, the evaluation of local blocks is neither the bottleneck asymptotically nor in practice, so we do not pursue an optimal-rank expansion in this regime.
+\end{remark}
