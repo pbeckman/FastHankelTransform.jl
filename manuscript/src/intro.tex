@@ -2,15 +2,19 @@
 The Fast Fourier Transform (FFT) has revolutionized a wide range of fields in
 mathematics, engineering, physics, etc., by enabling various signal processing
 and Fourier analysis tasks to be performed using a computational cost which
-scales linearly with the number of data points~$n$. However, the FFT is an
-algebraic algorithm, and requires that the input signal be sampled at equispaced
-points in time and that the desired output frequencies are equispaced on the
-integers. These assumptions are frequently not met in many applications, such as
-... To overcome this setback, Nonuniform FFT (NUFFT) algorithms have been
-developed~\cite{}. We will not provide a thorough overview of NUFFT algorithms,
-but merely say that software libraries~\cite{} have been release which achieve
-near FFT speeds, assuming that the distribution of time samples and frequency
-ouputs is not pathological.
+scales linearly with the number of data points~$N$, up to Nyquist sampling
+constraints. However, the FFT is an algebraic algorithm, and requires that the
+input signal be sampled at equispaced points in time and that the desired output
+frequencies are equispaced on the integers. These assumptions are frequently not
+met in many applications, such as adaptive numerical PDE solvers~\cite{},
+magnetic resonance imaging data acquisition~\cite{}, and various signal
+processing tasks~\cite{}. To overcome this setback, Nonuniform FFT (NUFFT)
+algorithms have been developed~\cite{}. We will not provide a thorough overview
+of NUFFT algorithms, but merely say that multiple software libraries~\cite{}
+have been release which achieve near FFT speeds in one dimension, assuming that
+the distribution of time samples and frequency outputs is not pathological. In
+higher dimensions, NUFFTs are less competitive with standard FFTs, but the
+computational task at hand is also significantly harder.
 
 The FFT drew out of a need to perform Fourier analysis in Cartesian coordinates.
 However, depending on the particular problem, the associated continuous Fourier
@@ -18,8 +22,8 @@ analysis might be better suited to other coordinate systems. One such commonly
 encountered situation is taking the Fourier transform of radially symmetric
 functions in dimensions~$ d \geq 2$. This arises frequently in spatial
 statistics~\cite{}, fast algorithms for PDEs~\cite{}, and imaging~\cite{}. For
-example, in two dimensions, we define the the Fourier transform of a
-function~$f$ as:
+example, in two dimensions, the Fourier transform of a
+function~$f$ is given as:
 \begin{equation}
   F(\omega_1, \omega_2) = \frac{1}{4\pi^2} \iint_{\R^2} f(x_1, x_2) \, e^{-i(\omega_1 x_1 + \omega_2 x_2)}  \, dx_1 \, dx_2.
 \end{equation}
@@ -46,7 +50,7 @@ transform can be written as
   \end{aligned}
 \end{equation}
 where we have used the integral representation of the zeroth-order Bessel
-function~\cite{}
+function~\cite{olver2010nist}:
 \begin{equation}
   J_0(x) = \frac{1}{\pi} \int_0^\pi \cos \left( x \cos \theta \right) \, d\theta.
 \end{equation}
@@ -54,25 +58,26 @@ The integral involving~$J_0$ in equation~\eqref{eq:ht} is known as a
 \emph{Hankel Transform} of order 0 -- usually just referred to as a Hankel
 Transform. In higher ambient dimensions, the Fourier transform of radially
 symmetric functions reduces to Hankel transforms of higher orders, a case which
-we address toward the end of this manuscript. Furthermore, if the function~$f$
+we address toward the end of this manuscript. Similarly, if the function~$f$
 in~\eqref{eq:ftpolar} has a particular periodicity dependence in~~$\theta$,
-e.g.~$f = f(r)e^{im\theta}$ then we have
+e.g.~$f = f(r)e^{im\theta}$, then we have
 \begin{equation}
   \begin{aligned}
-  F(\rho,\theta) &= \frac{1}{4\pi^2} \int_0^\infty f(r) \, r \int_0^{2\pi} 
+  F(\rho,\alpha) &= \frac{1}{4\pi^2} \int_0^\infty f(r) \, r \int_0^{2\pi} 
   e^{-i \rho r \cos(\alpha - \theta) } \, e^{im\theta}  \, d\theta \, dr \\
   &= \frac{i^m}{2\pi} \int_0^\infty f(r) \, r \, J_m(\rho r)  \, dr,
   \end{aligned}
 \end{equation}
-where, again, we have invoked an integral representation for~$J_m$~\cite{}.
-For now, we will focus on the standard (zeroth-order) Hankel transform, and
-return to these higher order transforms toward the end of the paper.
+where, again, we have invoked an integral representation
+for~$J_m$~\cite{olver2010nist}. For now, we will focus on the standard
+(zeroth-order) Hankel transform, and return to these higher order transforms
+toward the end of the paper.
 
-In order to compute~$F(\rho)$ in~\eqref{eq:ht} numerically at a collection
-of~$M$ "frequencies"~$\rho_j$'s, the Hankel transform must be discretized using
-an appropriate quadrature that depends on the particular kinds of~$f$ for which
-the integral is desired. Ignoring various corner cases, this results in the need
-for computing
+In order to numerically compute~$F$ in~\eqref{eq:ht} at a collection of~$M$
+"frequencies"~$\rho_j$'s, the Hankel transform must be discretized using an
+appropriate quadrature that depends on the particular kinds of~$f$ for which the
+integral is desired. Ignoring various corner cases, this results in the need for
+computing
 \begin{equation}
   \begin{aligned}
   F(\rho_j) \approx F_j &= \sum_{k=1}^N w_k \, f(r_k) \, r_k \, J_0(\rho_j r_k) \\
@@ -80,31 +85,47 @@ for computing
    \qquad \text{for } j = 1, \ldots, M.
   \end{aligned}
 \end{equation}
-The above sum will be referred to as the Discrete Hankel Transform (DHT). In our
-motivating example -- computing the continuous Fourier transform -- the DHT
-arose from the discretization of the associated integral. The DHT also arises in
-other circumstances, such as evaluating functions obtained from separation of
-variables, various signal processing tasks~\cite{}, etc. It is enough to
-consider the above sum mere with the coefficients~$c_k$.
+The above sum will be referred to as the Discrete Hankel Transform (DHT). 
 
-{\color{red}
-highlight other styles of fourier bessel transforms: varying n, schlomich, eval
-expansions, etc.
-}
-
-product with $\bm{A} \in \R^{m \times n}$
+In our motivating example -- computing the continuous Fourier transform -- the
+DHT arose from the discretization of the associated Fourier integral. The DHT
+also arises in other circumstances, such as evaluating functions obtained from
+separation of variables, various signal processing tasks~\cite{},
+etc.{\color{red} INTEGRATE INTO TEXT: These transforms appear in a wide range of
+applications including imaging~\cite{higgins1988hankel, zhao2013fourier},
+partial differential equations~\cite{bisseling1985fast,ali1999generalized}, and
+statistics~\cite{lord1954a, genton2002nonparametric}. In many such applications,
+a fully nonuniform DHT is desired, as the relevant frequencies $\omega_j$ may
+not be equispaced, and the most efficient quadrature rule for discretizing
+(\ref{eq:HT}) may have nodes $r_k$ which are also not equispaced. } It is enough
+to consider the above sum mere with the coefficients~$c_k$. The algorithm of
+this work allows for arbitrary selection of the frequencies~$\rho_j$ and
+nodes~$x_k$, in contrast to other algorithms which require some structure to
+their location (e.g. equispaced). There are a few types of commonly encountered
+DHTs, all of which our algorithm can address. Schl\"omilch expansions~\cite{}
+are of the form
 \begin{equation}
-    \bm{g} = \bm{A}\bm{c}, \qquad \bm{A}_{jk} = J_\nu(\omega_j r_k).
+  \label{eq:expan}
+  f_k = \sum_{j = 1}^M b_j \, J_0(\rho_j r_k),
 \end{equation}
-These transforms appear in a wide range of applications including
-imaging~\cite{higgins1988hankel, zhao2013fourier}, partial differential
-equations~\cite{bisseling1985fast,ali1999generalized}, and
-statistics~\cite{lord1954a, genton2002nonparametric}. In many such
-applications, a fully nonuniform DHT is desired, as the relevant frequencies
-$\omega_j$ may not be equispaced, and the most efficient quadrature rule for
-discretizing (\ref{eq:HT}) may have nodes $r_k$ which are also not equispaced.
+where~$r_k \in [0,1]$ and the frequencies are chosen as~$\rho_j = j\pi$.
+Fourier-Bessel expansions, often used in separation of variables calculations
+for PDEs, are given by the same expansion above in~\eqref{eq:expan}, but the
+frequencies~$\rho_j$ are chosen to be the ordered roots of~$J_0$. In the most
+restrictive case, as discussed in~\cite{johnson1987}, the frequencies~$\rho_j$
+are set to be the ordered roots of~$J_0$, and the nodes~$r_k$ are set to be
+scaled roots of~$J_0$, i.e.~$r_k = \rho_k/\rho_{M+1}$, where~$\rho_{M+1}$ is
+the~$(M+1)$th largest root of~$J_0$ (which doesn't explicitly appear in the sum
+above). Analogues of all these special cases exist when~$J_0$ is replaced with a
+higher order bessel function~$J_m$ as well, but we do not go into the details as
+our algorithm handles them all similarly.
+
+
+
 
 \subsection*{Existing methods}
+\label{sec:existing}
+
 A number of methods exist in the literature to evaluate (\ref{eq:HT}) and
 (\ref{eq:DHT}). These include series expansion methods
 \cite{lord1954b,brunol1977fourier,cavanagh1979numerical},
@@ -134,6 +155,14 @@ is the $k^{th}$ zero of $J_\nu$.
 
 \subsection*{Novelty of this work}
 
+At a high level, our algorithm can be viewed as a generalization of the one
+described in~\cite{townsend2015fast}. In~\cite{townsend2015fast}, asymptotic
+expansions were used to replace~$J_0$ for various arguments. These asymptotic
+expansions involved trigonometic functions, resulting in a fast algorithm for
+computing the DHT using fast cosine transforms (FCTs) and fast sine transforms
+(FSTs). In order to invoke these fast algorithms, various assumptions
+on~$\rho_j$ and~$r_k$ had to be made. In our work, 
+
 
 We describe here a precomputation-free fully nonuniform fast Hankel transform
 (NUFHT) which generalizes~\cite{townsend2015fast} in a number of ways. First, we
@@ -152,8 +181,15 @@ by the user-specified tolerance $\epsilon$.
 
 \subsection*{Outline of the paper}
 
-asdfasd
-f
+The paper is organized as follows. In~\ref{sec:overview}, we give a very high
+level view of how our algorithms works, omitting any technical details until
+later on. Then, in~\ref{sec:approx} we provide the key building blocks of the
+algorithm, what we call local expansions and asymptotic expansions for Bessel
+functions that allow for the invocation of NUFFTs. Afterward, in~\ref{sec:nufht}
+we provide a fully detailed description of the algorithm and its associated
+complexity analysis. Various numerical examples are provided in
+Section~\ref{sec:results}, and we conclude with some additional discussion in~\ref{sec:discussion}.
+
 
 %%% Local Variables:
 %%% mode: latex
