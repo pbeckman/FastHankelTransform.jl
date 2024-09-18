@@ -1,6 +1,6 @@
 
 
-\subsection{Determining the cutoff between expansions}
+\subsection{Determining order of expansions crossover point}
 
 With these error bounds in hand, we precompute the following tables for
 tolerances $\epsilon = \texttt{1e-4}, \dots, \texttt{1e-15}$, orders $\nu = 1,
@@ -39,6 +39,7 @@ a vector as described above:
     \item Direct blocks $\mathscr{D}$ which are small enough that no fast
     expansion is needed
 \end{list}
+
 In order to determine a subdivision of $\bm{A}$ into blocks of these three
 types, we initialize a set of \textit{mixed} blocks $\mathscr{M} = \{(1:m,
 1:n)\}$, which contains a mix of local and asymptotic entries. We then chose an
@@ -91,7 +92,7 @@ small collection.
     \include{src/nufht-algo.tex}
 \end{algorithm2e}
 
-\subsection{Computational complexity}
+\subsection{Complexity analysis}
 
 We now analyze the computational complexity of the proposed approach. In order
 to do so, we must first comment on the complexity of the NUFFT, which is an
@@ -187,7 +188,7 @@ space-frequency product $\bO(\Omega R)$ for type-III.}
 
 In typical applications the domain of integration $[0,R]$ is fixed by e.g. the
 support of the function $f$ whose Fourier transform is desired, and the maximum
-frequency at which the transform is desired grow with $n$. The following
+frequency at which the transform is desired grows with $n$. The following
 corollary studies this common scenario, and shows that the complexity of our
 algorithm agrees with \cite{townsend2015fast} up to a $\log\log n$ factor for
 special cases including Schl\"omilch and Fourier-Bessel expansions. For notational conciseness, we consider the number of terms $L$ and $M$ in each expansion as constants.

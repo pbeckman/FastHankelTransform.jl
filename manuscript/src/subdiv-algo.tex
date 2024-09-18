@@ -1,0 +1,14 @@
+\SetKwFunction{Subdivide}{Subdivide}
+\Function{\Subdivide{$\bm{r}, \bm{\omega}, z, \texttt{\upshape min\_size}$}}{
+    $\mathscr{L} = \mathscr{A} = \mathscr{D} = \emptyset$ \\
+    $\mathscr{M} = \{(1:m, 1:n)\}$ \\
+    \While{$\mathscr{M} \neq \emptyset$}{
+        Pop an element $(j_0 : j_1, k_0 : k_1)$ from $\mathscr{M}$ \\
+        $(j,k) = \textsc{SplitIndices}(r_{j_0},\dots,r_{j_1}, \omega_{k_0},\dots,\omega_{k_1}, z)$ \\
+        Append $(j_0:j, k_0:k)$ to $\mathscr{L}$ \\
+        Append $(j+1:j_1, k+1:k_1)$ to $\mathscr{A}$ \\
+        Append $(j_0:j, k+1:k_1)$ to $\mathscr{M}$ \textbf{if} $(j - j_0 + 1)(k_1 - k) > \texttt{\upshape min\_size}$ \textbf{else} $\mathscr{D}$ \\
+        Append $(j+1:j_1, k_0:k)$ to $\mathscr{M}$ \textbf{if} $(j_1 - j)(k_1 - k + 1) > \texttt{\upshape min\_size}$ \textbf{else} $\mathscr{D}$
+    }
+    \Return{$(\mathscr{L}, \mathscr{A}, \mathscr{D})$}
+}
