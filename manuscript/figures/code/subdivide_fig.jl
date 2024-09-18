@@ -51,7 +51,7 @@ p1 = heatmap(
     (1 .+ (ws*rs' .< z)) .* ([zeros(2w); ones(m-4w); zeros(2w)]) .* ([zeros(2w); ones(m-4w); zeros(2w)])', 
     yflip=true, 
     legend=:none, axis=([], false),
-    c=[:black, scrungle[1], scrungle[2]],
+    c=[:black, scrungle[6], scrungle[7]],
     margin=0mm
     )
 plot!(p1, js_split, is_split, c=:black, line=4, widen=false)
@@ -69,7 +69,7 @@ for level=1:num_levels
         number_boxes(n, m, boxes, w=4) .* ([zeros(2w); ones(m-4w); zeros(2w)]) .* ([zeros(2w); ones(m-4w); zeros(2w)])', 
         yflip=true, 
         legend=:none, axis=([], false),
-        c=[:black, scrungle[2], scrungle[1], :gray25]
+        c=[:black, scrungle[7], scrungle[6], :gray25]
         )
     plot!(pl, js_split, is_split, c=:black, line=4, widen=false)
     pls[level] = pl

@@ -40,11 +40,11 @@ pl = plot(
     )
 plot!(pl,
     ws, abs.((gs_dir .- gs_asy) ./ gs_dir), label="Asymptotic",
-    line=(3, scrungle[1]),
+    line=(3, scrungle[6]),
     )
 plot!(pl,
     ws, abs.((gs_dir .- gs_loc) ./ gs_dir), 
-    line=(3, scrungle[2]), label="Local"
+    line=(3, scrungle[7]), label="Local"
     )
 plot!(pl,
     [FastHankelTransform.NUFHT_Z_SPLIT[], FastHankelTransform.NUFHT_Z_SPLIT[]],

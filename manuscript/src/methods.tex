@@ -109,46 +109,75 @@ size $N$ scales like $\bO(n)$ for type-I, $\bO(m)$ for type-II, and like the
 space-frequency product $\bO(\Omega R)$ for type-III.}
 
 \begin{theorem}
-    Let $\omega_1,\dots,\omega_m \in [0,m]$ and $r_1,\dots,r_n \in [0,R]$ for some fixed $R$. Then
-    the computational cost of computing the NUFHT to tolerance $\epsilon$ using
-    Algorithm \ref{alg:nufht} is $\bO\big((m + n\log n) \log \min(n,m) \big)$.
+    Take $\omega_1 < \dots < \omega_m \in [0,\infty)$ and $r_1 < \dots < r_n \in
+    [0,\infty)$ and define the space-frequency product $P := (\omega_m -
+    \omega_1)(r_n - r_1)$. Then the computational cost of computing the NUFHT to
+    tolerance $\epsilon$ using Algorithm \ref{alg:nufht} is 
+    $$\bO\bigg(\Big((M + L)(m + n) + MP\log P\Big) \log \min(n,m) \bigg)$$ where
+    $L$ and $M$ are the number of local and asymptotic terms respectively chosen
+    according to $\epsilon$.
 \end{theorem}
 
 \begin{proof}
-    As the space-frequency product is $\bO(m)$ by assumption, the complexity of 
-
     If $\omega_j r_k \leq z$ for all $j=1,\dots,n$ and $k=1,\dots,m$ then only
-    the low-rank local expansion is used, resulting in $\bO(m + n)$ complexity.
-    If instead $\omega_j r_k > z$ everywhere, then only the asymptotic expansion
-    is used, giving $\bO(m + n\log n)$ complexity.
+    the $L$-term low-rank local expansion is used, which can be applied in
+    $\bO(L(m + n))$ time. If instead $\omega_j r_k > z$ everywhere, then only
+    the $M$-term asymptotic expansion is used, which can be applied using the
+    Type-III NUFFT in $\bO(M(m + n + P\log P))$ complexity.
 
     Otherwise, consider the case where $\bm{A}$ contains both local and
-    asymptotic entries. After step $\ell$ of subdividing every mixed block, we
-    obtain $2^{\ell}$ new mixed blocks, $2^{\ell-1}$ new local blocks, and
-    $2^{\ell-1}$ new asymptotic blocks. Let the local blocks be of size
-    $m_{\ell,b} \times n_{\ell,b}$ for $b = 1,\dots,2^{\ell-1}$. Then
-    $\sum_{b=1}^{2^{\ell-1}} m_{\ell,b} = m$ and $\sum_{b=1}^{2^{\ell-1}}
-    n_{\ell,b} = n$. An analogous fact holds for the asymptotic blocks. The
-    number of levels $N_\ell$ scales like $\log\min(n,m)$. Then the total cost
-    of local evaluation is 
+    asymptotic entries. Without loss of generality assume $\omega_1 =
+    \frac{z}{\omega_m}$ and $r_1 = \frac{z}{r_n}$, since otherwise we have
+    blocks which can be evaluated using a single expansion as just described.
+
+    After step $\ell$ of subdividing every mixed block, we obtain $2^{\ell}$ new
+    mixed blocks, $2^{\ell-1}$ new local blocks, and $2^{\ell-1}$ new asymptotic
+    blocks. Let the local blocks be of size $m_{\ell,b}^{(\text{loc})} \times
+    n_{\ell,b}^{(\text{loc})}$ for $b = 1,\dots,2^{\ell-1}$. Then
+    $\sum_{b=1}^{2^{\ell-1}} m_{\ell,b}^{(\text{loc})} \leq m$ and
+    $\sum_{b=1}^{2^{\ell-1}} n_{\ell,b}^{(\text{loc})} \leq n$. An analogous
+    fact holds for the asymptotic blocks. The number of levels
+    $N_{\text{level}}$ scales like $\bO(\log\min(n,m))$. 
+    
+    Therefore, the total cost of local evaluation is 
     \begin{align}
-        \sum_{\ell=1}^{N_\ell} \sum_{b=1}^{2^{\ell-1}} \bO\left(m_{\ell,b}^{(\text{loc})} + n_{\ell,b}^{(\text{loc})}\right)
-        &= \sum_{\ell=1}^{N_\ell} \bO\left(m + n\right) \\
-        &= \bO\big((m + n) \log \min(n,m)\big).
+        \sum_{\ell=1}^{N_{\text{level}}} \sum_{b=1}^{2^{\ell-1}} \bO\left(L\left(m_{\ell,b}^{(\text{loc})} + n_{\ell,b}^{(\text{loc})}\right)\right)
+        &= \sum_{\ell=1}^{N_{\text{level}}} \bO(L(m + n)) \\
+        &= \bO\big(L (m + n) \log \min(n,m)\big).
     \end{align}
-    For a set of positive integers $n_b$ such that $\sum_b n_b = n$, by
-    H\"older's inequality we obtain
+    Let $P_{\ell,b}$ be the space-frequency product of box $b$ at level $\ell$.
+    As the total space frequency product is $P$ and all asymptotic boxes occupy
+    disjoint rectangles in $(\omega, r)$-space, we have
+    $\sum_{\ell=1}^{N_{\text{level}}} \sum_{b=1}^{2^{\ell-1}} P_{\ell,b} \leq
+    P$. Then by H\"older's inequality we obtain 
+    \begin{align} 
+        \sum_{\ell=1}^{N_{\text{level}}} \sum_{b=1}^{2^{\ell-1}} P_{\ell,b} \log P_{\ell,b}
+        \leq \left( \sum_{\ell=1}^{N_{\text{level}}} \sum_{b=1}^{2^{\ell-1}} P_{\ell,b} \right) \left(\max_{\ell,b} \log P_{\ell,b} \right) 
+        \leq P \log P.
+    \end{align}
+
+    % We now show that as we subdivide, the space-frequency product of the
+    % resulting blocks shrinks sufficiently fast that the cost of NUFFTs on
+    % smaller blocks does not contribute to the asymptotic cost. Consider a
+    % mixed block corresponding to a rectangle $[\frac{z}{\Omega}, \Omega]
+    % \times [\frac{z}{R}, R]$. If we subdivide this block at some point
+    % $(\omega, \frac{z}{\omega})$, then the largest possible space-frequency
+    % product of the resulting lower-right block is \begin{equation}
+    % \max_{\frac{z}{R} \leq \omega \leq \Omega} \ (\Omega - \omega)\left(R -
+    % \frac{z}{\omega}\right) = \Omega R \left( 1 - \sqrt{\frac{z}{\Omega R}}
+    % \right)^2 \leq \Omega R \end{equation} which is achieved by splitting at
+    % $\omega = \sqrt{\frac{\Omega z}{R}}$, i.e. at the midpoint in log space
+    % between $\frac{z}{R}$ and $\Omega$. This yields two new mixed blocks
+    % $[\omega, \Omega] \times [\frac{z}{\Omega}, \frac{z}{\omega}]$ and
+    % $[\frac{z}{R},\omega] \times [\frac{z}{\omega}, R]$. The largest possible
+    % space-frequency products of their lower-right blocks are 
+
+    The total cost of asymptotic evaluation via the Type-III NUFFT is therefore
     \begin{align}
-        \sum_{b} n_b \log n_b 
-        \leq \left( \sum_{b} n_b \right) \left(\max_b \log n_b\right)
-        \leq n \log n.
+        & \sum_{\ell=1}^{N_{\text{level}}} \sum_{b=1}^{2^{\ell-1}} \bO\left(M\left(m_{\ell,b}^{(\text{asy})} + n_{\ell,b}^{(\text{asy})} + P_{\ell,b}^{(\text{asy})} \log P_{\ell,b}^{(\text{asy})} \right)\right) \\
+        &\hspace*{0.2\textwidth} = \bO\big(M (m + n + P\log P) \log \min(n,m) \big).
     \end{align}
-    Therefore the total cost of asymptotic evaluation is
-    \begin{align}
-        \sum_{\ell=1}^{N_\ell} \sum_{b=1}^{2^{\ell-1}} \bO\left(m_{\ell,b}^{(\text{asy})} + n_{\ell,b}^{(\text{asy})} \log n_{\ell,b}^{(\text{asy})}\right)
-        &= \sum_{\ell=1}^{N_\ell} \bO\left(m + n \log n\right) \\
-        &= \bO\big((m + n\log n) \log \min(n,m) \big).
-    \end{align}
+
     We subdivide until all direct blocks are all of size $m_b \times n_b$ with
     $m_bn_b = \bO(1)$. Thus the cost of computing the dense matvec with each
     direct block is $\bO(1)$, and the number of direct blocks is $\bO(m + n)$.
@@ -156,11 +185,23 @@ space-frequency product $\bO(\Omega R)$ for type-III.}
     of local, asymptotic, and direct evaluation gives the result.
 \end{proof}
 
-Note that in the square case $n=m$ the complexity simplifies to $\bO(n\log^2n)$,
-which agrees with the special cases studied in \cite{townsend2015fast} up to a
-factor of $\log\log n$, but our method is applicable to fully nonuniform
-$\omega_j$ and $r_k$.
+In typical applications the domain of integration $[0,R]$ is fixed by e.g. the
+support of the function $f$ whose Fourier transform is desired, and the maximum
+frequency at which the transform is desired grow with $n$. The following
+corollary studies this common scenario, and shows that the complexity of our
+algorithm agrees with \cite{townsend2015fast} up to a $\log\log n$ factor for
+special cases including Schl\"omilch and Fourier-Bessel expansions. For notational conciseness, we consider the number of terms $L$ and $M$ in each expansion as constants.
+\begin{corollary}
+    Take $\omega_1 < \dots < \omega_n \in [0,\infty)$ and $r_1 < \dots < r_n \in
+    [0,\infty)$ such that the space-frequency product $P = \bO(n)$. Then the
+    computational cost of Algorithm \ref{alg:nufht} is $\bO(n\log^2n)$.
+\end{corollary}
 
 \begin{remark}
-    For local blocks away from the origin, one can prove that the $\epsilon$-rank of blocks of $\bm{A}$ is actually significantly lower than the $L$ used in the Wimp expansion due to the complementary low-rank or butterfly property of the Hankel transform. However, the evaluation of local blocks is neither the bottleneck asymptotically nor in practice, so we do not pursue an optimal-rank expansion in this regime.
+    For local blocks away from the origin, one can prove that the
+    $\epsilon$-rank of blocks of $\bm{A}$ is actually significantly lower than
+    the $L$ used in the Wimp expansion due to the complementary low-rank or
+    butterfly property of the Hankel transform. However, the evaluation of local
+    blocks is neither the bottleneck asymptotically nor in practice, so we do
+    not pursue an optimal-rank expansion in this regime.
 \end{remark}

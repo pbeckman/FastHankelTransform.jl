@@ -2,7 +2,7 @@
 The Fast Fourier Transform (FFT) has revolutionized a wide range of fields in
 mathematics, engineering, physics, etc., by enabling various signal processing
 and Fourier analysis tasks to be performed using a computational cost which
-scales linearly with the number of data points~$N$, up to Nyquist sampling
+scales quasi-linearly with the number of data points~$N$, up to Nyquist sampling
 constraints. However, the FFT is an algebraic algorithm, and requires that the
 input signal be sampled at equispaced points in time and that the desired output
 frequencies are equispaced on the integers. These assumptions are frequently not
@@ -16,27 +16,26 @@ the distribution of time samples and frequency outputs is not pathological. In
 higher dimensions, NUFFTs are less competitive with standard FFTs, but the
 computational task at hand is also significantly harder.
 
-The FFT drew out of a need to perform Fourier analysis in Cartesian coordinates.
+The FFT grew out of a need to perform Fourier analysis in Cartesian coordinates.
 However, depending on the particular problem, the associated continuous Fourier
 analysis might be better suited to other coordinate systems. One such commonly
 encountered situation is taking the Fourier transform of radially symmetric
 functions in dimensions~$ d \geq 2$. This arises frequently in spatial
 statistics~\cite{}, fast algorithms for PDEs~\cite{}, and imaging~\cite{}. For
-example, in two dimensions, the Fourier transform of a
-function~$f$ is given as:
+example, in two dimensions, the Fourier transform of a function~$f$ is given as:
 \begin{equation}
-  F(\omega_1, \omega_2) = \frac{1}{4\pi^2} \iint_{\R^2} f(x_1, x_2) \, e^{-i(\omega_1 x_1 + \omega_2 x_2)}  \, dx_1 \, dx_2.
+  \hat{f}(\omega_1, \omega_2) = \frac{1}{4\pi^2} \iint_{\R^2} f(x_1, x_2) \, e^{-i(\omega_1 x_1 + \omega_2 x_2)}  \, dx_1 \, dx_2.
 \end{equation}
-In polar coordinates with~$(\rho,\alpha) = (\omega_1,\omega_2)$ and~$(r,\theta)
-= x_1,x_2)$, the above expression transforms into
+Transforming to polar coordinates~$(\omega_1,\omega_2) \mapsto (\rho,\alpha)$
+and~$(x_1,x_2) \mapsto (r,\theta)$ the above expression becomes
 \begin{equation}
   \label{eq:ftpolar}
   \begin{aligned}
-    F(\rho, \alpha) &= \frac{1}{4\pi^2} \iint_{\R^2} 
+    \hat{f}(\rho, \alpha) &= \frac{1}{4\pi^2} \int_0^{2\pi} \int_0^\infty
     f(r,\theta) \, 
     e^{-i \rho r (\cos\alpha \cos\theta + \sin\alpha \sin\theta) } 
     \, r \, dr \, d\theta \\
-  &= \frac{1}{4\pi^2} \iint_{\R^2} f(r,\theta) \, e^{-i \rho r \cos(\alpha-\theta) } \, r \, dr \, d\theta.
+  &= \frac{1}{4\pi^2} \int_0^{2\pi} \int_0^\infty f(r,\theta) \, e^{-i \rho r \cos(\alpha-\theta) } \, r \, dr \, d\theta.
   \end{aligned}
 \end{equation}
 Furthermore, if~$f$ is radially symmetric, i.e.~$f = f(r)$, then the above
@@ -44,7 +43,7 @@ transform can be written as
 \begin{equation}
   \label{eq:ht}
   \begin{aligned}
-  F(\rho,\alpha) &= \frac{1}{4\pi^2} \int_0^\infty f(r) \, r \int_0^{2\pi} 
+  \hat{f}(\rho,\alpha) &= \frac{1}{4\pi^2} \int_0^\infty f(r) \, r \int_0^{2\pi} 
   e^{-i \rho r \cos(\alpha - \theta) }  \, d\theta \, dr \\
   &= \frac{1}{2\pi} \int_0^\infty f(r) \, r \, J_0(\rho r)  \, dr,
   \end{aligned}
@@ -63,7 +62,7 @@ in~\eqref{eq:ftpolar} has a particular periodicity dependence in~~$\theta$,
 e.g.~$f = f(r)e^{im\theta}$, then we have
 \begin{equation}
   \begin{aligned}
-  F(\rho,\alpha) &= \frac{1}{4\pi^2} \int_0^\infty f(r) \, r \int_0^{2\pi} 
+  \hat{f}(\rho,\alpha) &= \frac{1}{4\pi^2} \int_0^\infty f(r) \, r \int_0^{2\pi} 
   e^{-i \rho r \cos(\alpha - \theta) } \, e^{im\theta}  \, d\theta \, dr \\
   &= \frac{i^m}{2\pi} \int_0^\infty f(r) \, r \, J_m(\rho r)  \, dr,
   \end{aligned}
@@ -80,15 +79,15 @@ integral is desired. Ignoring various corner cases, this results in the need for
 computing
 \begin{equation}
   \begin{aligned}
-  F(\rho_j) \approx F_j &= \sum_{k=1}^N w_k \, f(r_k) \, r_k \, J_0(\rho_j r_k) \\
+  \hat{f}(\rho_j) \approx \hat{f}_j &= \sum_{k=1}^N w_k \, f(r_k) \, r_k \, J_0(\rho_j r_k) \\
   &= \sum_{k=1}^N c_k \, J_0(\rho_j r_k)
    \qquad \text{for } j = 1, \ldots, M.
   \end{aligned}
 \end{equation}
 The above sum will be referred to as the Discrete Hankel Transform (DHT). 
 
-In our motivating example -- computing the continuous Fourier transform -- the
-DHT arose from the discretization of the associated Fourier integral. The DHT
+In our motivating example --- computing the continuous Fourier transform --- the
+DHT arises from the discretization of the associated Fourier integral. The DHT
 also arises in other circumstances, such as evaluating functions obtained from
 separation of variables, various signal processing tasks~\cite{},
 etc.{\color{red} INTEGRATE INTO TEXT: These transforms appear in a wide range of
@@ -128,9 +127,9 @@ our algorithm handles them all similarly.
 
 A number of methods exist in the literature to evaluate (\ref{eq:HT}) and
 (\ref{eq:DHT}). These include series expansion methods
-\cite{lord1954b,brunol1977fourier,cavanagh1979numerical},
-convolutional approaches \cite{siegman1977quasi, johansen1979fast,
-mook1983algorithm, liu1999nonuniform}, and projection-slice or Abel transform-based methods
+\cite{lord1954b,brunol1977fourier,cavanagh1979numerical}, convolutional
+approaches \cite{siegman1977quasi, johansen1979fast, mook1983algorithm,
+liu1999nonuniform}, and projection-slice or Abel transform-based methods
 \cite{oppenheim1980computation, hansen1985fast, kapur1995algorithm}.
 See~\cite{cree1993algorithms} for a review of many of these early computational
 approaches. Unfortunately, these existing methods are either not applicable to
@@ -142,15 +141,15 @@ straightforward.
 
 More recently, butterfly algorithms \cite{oneil2010algorithm, li2015butterfly,
   pang2020interpolative} were introduced as a broadly applicable methodology for
-rapidly computing oscillatory transforms including the nonuniform DHT. However,
-these algorithms require a precomputation or factorization stage for each new
-set of $\omega_j$ and $r_k$, which can be a bottleneck for applications in which
-these evaluation points change with each evaluation. In order to provide a
-precomputation-free fast DHT,~\cite{townsend2015fast} employs a combination of
-asymptotic expansions and Bessel function identities evaluated using the
-equispaced FFT. The resulting scheme is applicable to equispaced or perturbed
-``quasi-equispaced'' grids, for example $j_{0,k} / j_{0,n+1}$ where $j_{\nu,k}$
-is the $k^{th}$ zero of $J_\nu$.
+  rapidly computing oscillatory transforms including the nonuniform DHT.
+  However, these algorithms require a precomputation or factorization stage for
+  each new set of $\omega_j$ and $r_k$, which can be a bottleneck for
+  applications in which these evaluation points change with each evaluation. In
+  order to provide a precomputation-free fast DHT,~\cite{townsend2015fast}
+  employs a combination of asymptotic expansions and Bessel function identities
+  evaluated using the equispaced FFT. The resulting scheme is applicable to
+  equispaced or perturbed ``quasi-equispaced'' grids, for example $j_{0,k} /
+  j_{0,n+1}$ where $j_{\nu,k}$ is the $k^{th}$ zero of $J_\nu$.
 
 
 \subsection*{Novelty of this work}
@@ -165,17 +164,18 @@ on~$\rho_j$ and~$r_k$ had to be made. In our work,
 
 
 We describe here a precomputation-free fully nonuniform fast Hankel transform
-(NUFHT) which generalizes~\cite{townsend2015fast} to the fully nonuniform setting in a number of ways. First, we
-employ an adaptive partitioning scheme which, for any choice of $r_k$ and
-$\omega_j$, subdivides $\bm{A}$ into blocks for which matrix-vector products can
-be evaluated efficiently. Second, we use the nonuniform fast Fourier transform
-(NUFFT)~\cite{dutt1993fast, greengard2004accelerating} to evaluate asymptotic
-expansions for nonuniform $r_k$ and $\omega_j$. Finally, we utilize the low-rank
-expansion of $J_\nu$ given by \cite{wimp1962polynomial} in the local regime
-where asymptotic expansions are not applicable. We derive error bounds for this
-low-rank expansion, allowing us to choose all approximation parameters
-automatically by analysis which guarantees that the resulting error is bounded
-by the user-specified tolerance $\epsilon$.
+(NUFHT) which generalizes~\cite{townsend2015fast} to the fully nonuniform
+setting in a number of ways. First, we employ an adaptive partitioning scheme
+which, for any choice of $r_k$ and $\omega_j$, subdivides $\bm{A}$ into blocks
+for which matrix-vector products can be evaluated efficiently. Second, we use
+the nonuniform fast Fourier transform (NUFFT)~\cite{dutt1993fast,
+greengard2004accelerating} to evaluate asymptotic expansions for nonuniform
+$r_k$ and $\omega_j$. Finally, we utilize the low-rank expansion of $J_\nu$
+given by \cite{wimp1962polynomial} in the local regime where asymptotic
+expansions are not applicable. We derive error bounds for this low-rank
+expansion, allowing us to choose all approximation parameters automatically by
+analysis which guarantees that the resulting error is bounded by the
+user-specified tolerance $\epsilon$.
 
 
 
@@ -188,10 +188,8 @@ algorithm, what we call local expansions and asymptotic expansions for Bessel
 functions that allow for the invocation of NUFFTs. Afterward, in~\ref{sec:nufht}
 we provide a fully detailed description of the algorithm and its associated
 complexity analysis. Various numerical examples are provided in
-Section~\ref{sec:results}, and we conclude with some additional discussion in~\ref{sec:discussion}.
+Section~\ref{sec:results}, and we conclude with some additional discussion
+in~\ref{sec:discussion}.
 
 
-%%% Local Variables:
-%%% mode: latex
-%%% TeX-master: "../main"
-%%% End:
+%%% Local Variables: %% mode: latex %% TeX-master: "../main" %% End:
