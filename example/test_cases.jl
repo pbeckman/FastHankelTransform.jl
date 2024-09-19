@@ -42,8 +42,8 @@ function test_case(case, n, m)
         ws = collect(range(4, stop=10, length=n))
         rs = collect(range(4, stop=10, length=m))
     elseif case == :asy 
-        ws = collect(range(6, stop=100, length=n))
-        rs = collect(range(6, stop=100, length=m))
+        ws = collect(range(30, stop=100, length=n))
+        rs = collect(range(30, stop=100, length=m))
     else
         error("case not recognized!")
     end

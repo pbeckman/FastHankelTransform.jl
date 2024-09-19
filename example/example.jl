@@ -1,28 +1,11 @@
 
 using Random, LinearAlgebra, SpecialFunctions, FastHankelTransform, Plots, Plots.Measures, LaTeXStrings, FastGaussQuadrature, Printf, BenchmarkTools, TimerOutputs
-using FINUFFT
+# using FINUFFT
 
 include("./test_cases.jl")
 
-function number_boxes(n, m, boxes)
-    M = fill(NaN, n, m)
-
-    for (box_set, val) in zip(boxes, [2,3,1])
-        for (b, box) in enumerate(box_set)
-            i0b, i1b, j0b, j1b   = box
-            M[i0b:i1b, j0b:j1b] .= val
-            M[i0b:i1b, j0b]     .= 1
-            M[i0b:i1b, j1b]     .= 1
-            M[i0b, j0b:j1b]     .= 1
-            M[i1b, j0b:j1b]     .= 1
-        end
-    end
-
-    return M
-end
-
 # order of transform
-nu  = 7/2
+nu  = 4 + 1/2
 # number of sources
 m   = 1_000
 # number of targets
@@ -36,15 +19,15 @@ K_asy = FastHankelTransform.NUFHT_ASY_K[]
 K_loc = FastHankelTransform.NUFHT_LOC_K[]
 
 # case = :twodimrandom
-case = :roots
-# case = :one
+# case = :roots
+case = :one
 
 Random.seed!(123)
 rs, cs, ws, n, m = test_case(case, n, m)
 
 println("Benchmarking NUFHT...")
 # @btime gs_nufht = nufht($nu, $rs, $cs, $ws, tol=$tol, max_levels=5)
-@time gs_nufht = nufht(nu, rs, cs, ws, tol=tol);
+@time gs_nufht = nufht(nu, rs, cs, ws, tol=tol, min_dim_prod=n-1);
 
 if isinteger(nu)
     dims(box) = (box[2] - box[1] + 1, box[4] - box[3] + 1)
@@ -79,7 +62,7 @@ if max(n,m) <= 1000
 end
 
 # println("NUFHT:")
-# @time gs_nufht = nufht(nu, rs, cs, ws, tol=tol)
+# @time gs_nufht = nufht(nu, rfs, cs, ws, tol=tol)
 
 gr(size=(1000,700))
 default(margins=2mm, fontfamily="Computer Modern")
@@ -87,7 +70,7 @@ Plots.scalefontsizes()
 Plots.scalefontsizes(1.5)
 
 if max(n, m) <= 10000
-    if case == :one && isinteger(nu)
+    if case == :one
         pl = plot(
             title="ν = $nu",
             xlabel=L"z",
@@ -96,29 +79,29 @@ if max(n, m) <= 10000
             ylims=[1e-17, 1e1],
             # legend=:top
         )
-        println("Asymptotic:")
-        gs_asy = zeros(Float64, n)
-        @time FastHankelTransform.add_asy!(gs_asy, nu, rs, cs, ws, K=K_asy)
-        println("Wimp:")
-        gs_wimp = zeros(Float64, n)
-        @time FastHankelTransform.add_loc!(gs_wimp, nu, rs, cs, ws, K=K_loc)
+        # println("Asymptotic:")
+        # gs_asy = zeros(Float64, n)
+        # @time FastHankelTransform.add_asy!(gs_asy, nu, rs, cs, ws, K=K_asy)
+        # println("Wimp:")
+        # gs_wimp = zeros(Float64, n)
+        # @time FastHankelTransform.add_loc!(gs_wimp, nu, rs, cs, ws, K=K_loc)
         # println("Taylor:")
         # gs_tay = zeros(Float64, n)
         # @time add_taylor!(gs_tay, nu, rs, cs, ws, K=10)
-        plot!(pl,
-            ws,
-            abs.((gs_dir - gs_wimp) ./ gs_dir) .+ 1e-16,
-            label="Wimp",
-            # color=cgrad(:default, 5, categorical=true)[2],
-            line=3
-            )
-        plot!(pl,
-            ws,
-            abs.((gs_dir - gs_asy) ./ gs_dir) .+ 1e-16,
-            label="Hankel",
-            # color=cgrad(:default, 5, categorical=true)[4],
-            line=3
-            )
+        # plot!(pl,
+        #     ws,
+        #     abs.((gs_dir - gs_wimp) ./ gs_dir) .+ 1e-16,
+        #     label="Wimp",
+        #     # color=cgrad(:default, 5, categorical=true)[2],
+        #     line=3
+        #     )
+        # plot!(pl,
+        #     ws,
+        #     abs.((gs_dir - gs_asy) ./ gs_dir) .+ 1e-16,
+        #     label="Hankel",
+        #     # color=cgrad(:default, 5, categorical=true)[4],
+        #     line=3
+        #     )
         # plot!(pl,
         #     ws,
         #     abs.((gs_dir - gs_tay) ./ gs_dir) .+ 1e-16,
@@ -155,6 +138,13 @@ if max(n, m) <= 10000
             label="NUFHT",
             color=:purple,
             line=(3, :dash)
+        )
+        plot!(pl,
+            ws,
+            abs.((gs_dir - (ws/2).^nu/gamma(nu + 1)) ./ gs_dir) .+ 1e-16,
+            label="power law",
+            color=:red,
+            line=(3, :solid)
         )
         display(pl)
     end

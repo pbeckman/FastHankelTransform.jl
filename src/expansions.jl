@@ -44,8 +44,7 @@ function add_loc!(gs, nu, rs, cs, ws;
         end
 
         for l=0:K
-            @inbounds begin
-            for k in eachindex(rs)
+            @inbounds for k in eachindex(rs)
                 # evaluate Chebyshev polynomials
                 if nu == 0
                     cheb_buffer[l+1] += (l==0 ? 1 : 2) * (2cos(l*acos(rs[k]/rs[end]))^2 - 1) * cs[k]
@@ -55,11 +54,9 @@ function add_loc!(gs, nu, rs, cs, ws;
                     cheb_buffer[l+1] += 2 * cos((2l+1)*acos(rs[k]/rs[end])) * cs[k]
                 end
             end
-            end
         end
 
-        for j in eachindex(ws)
-            @inbounds begin
+        @inbounds for j in eachindex(ws)
             if nu == 0
                 # compute all necessary Bessel functions evals
                 besselj!(bessel_buffer_1, 0:K, ws[j]*rs[end]/2)
@@ -80,13 +77,13 @@ function add_loc!(gs, nu, rs, cs, ws;
                 view(bessel_buffer_1, l0+2:2:(K+1)) .*= -1
             end
             gs[j] += dot(bessel_buffer_1, cheb_buffer)
-            end
         end
     end
 end
 
 function add_asy!(gs, nu, rs, cs, ws; 
-    K=5, in_buffer=nothing, out_buffer=nothing)
+    K=5, in_buffer=nothing, 
+    out_buffer=nothing, real_buffer_1=nothing, real_buffer_2=nothing)
     @timeit TIMER "Asymptotic" begin
         # initialize temporary buffers for NUFFTs
         if isnothing(in_buffer)
@@ -95,12 +92,17 @@ function add_asy!(gs, nu, rs, cs, ws;
         if isnothing(out_buffer)
             out_buffer = zeros(ComplexF64, length(ws))
         end
+        if isnothing(real_buffer_1)
+            real_buffer_1 = zeros(Float64, length(ws))
+        end
+        if isnothing(real_buffer_2)
+            real_buffer_2 = zeros(Float64, length(ws))
+        end
 
         for l=0:K
             @timeit TIMER "Set up NUFFT input" begin
-                in_buffer  .= rs
-                in_buffer .^= -2l-1/2
-                in_buffer .*= cs
+                # write cs .* rs.^(-2l-1/2) to buffer
+                in_buffer .= cs .* (rs.^(-2l-1)) .* sqrt.(rs)
             end
             @timeit TIMER "NUFFT" begin
                 nufft1d3!(
@@ -109,24 +111,22 @@ function add_asy!(gs, nu, rs, cs, ws;
                 )
             end
             @timeit TIMER "Add NUFFT to output" begin
-                out_buffer .*= exp((-nu/2-1/4)*pi*im)
-                # take real part in place
-                flbuf  = reinterpret(Float64, out_buffer)
-                buf1   = @view flbuf[1:2:end-1]
-                # use imaginary part memory as second buffer
-                buf2   = @view flbuf[2:2:end]
-                buf2  .= ws
-                buf2 .^= -2l-1/2 # TODO (pb 7/28/2024) : should this be SIMD or something? what about other in-place ops?
+                out_buffer .*= cispi(-nu/2-1/4)
+                @inbounds @simd for j in eachindex(out_buffer)
+                    # write real part of NUFFT output to buffer 1
+                    real_buffer_1[j] = real(out_buffer[j])
+                    # write ws.^(-2l-1/2) to buffer 2
+                    real_buffer_2[j] = (ws[j]^(-2l-1))*sqrt(ws[j])
+                end
                 # multiply by coefficient and do diagonal scaling
-                buf1 .*= sqrt(2/pi) * (-1)^l * NUFHT_ASY_COEF[][2l+1]
-                buf1 .*= buf2
-                gs   .+= buf1
+                real_buffer_1 .*= sqrt(2/pi) * (-1)^l * NUFHT_ASY_COEF[][2l+1]
+                real_buffer_1 .*= real_buffer_2
+                gs            .+= real_buffer_1
             end
 
             @timeit TIMER "Set up NUFFT input" begin
-                in_buffer  .= rs
-                in_buffer .^= -2l-1-1/2
-                in_buffer .*= cs 
+                # write cs .* rs.^(-2l-1-1/2) to buffer
+                in_buffer .= cs .* (rs.^(-2l-2)) .* sqrt.(rs)
             end
             @timeit TIMER "NUFFT" begin
                 nufft1d3!(
@@ -135,18 +135,18 @@ function add_asy!(gs, nu, rs, cs, ws;
                 ) 
             end
             @timeit TIMER "Add NUFFT to output" begin
-                out_buffer .*= exp((-nu/2-1/4)*pi*im)
-                # take imaginary part in place
-                flbuf = reinterpret(Float64, out_buffer)
-                buf1   = @view flbuf[2:2:end] 
-                # use real part memory as second buffer
-                buf2   = @view flbuf[1:2:end-1] 
-                buf2  .= ws
-                buf2 .^= -2l-1-1/2
+                out_buffer .*= cispi(-nu/2-1/4)
+                int_exp = -2l-2
+                @inbounds @simd for j in eachindex(out_buffer)
+                    # write imaginary part of NUFFT output to buffer 1
+                    real_buffer_1[j] = imag(out_buffer[j])
+                    # write ws.^(-2l-1-1/2) to buffer 2
+                    real_buffer_2[j] = (ws[j]^int_exp)*sqrt(ws[j])
+                end
                 # multiply by coefficient and do diagonal scaling
-                buf1 .*= sqrt(2/pi) * (-1)^l * NUFHT_ASY_COEF[][2l+2]
-                buf1 .*= buf2
-                gs   .-= buf1
+                real_buffer_1 .*= sqrt(2/pi) * (-1)^l * NUFHT_ASY_COEF[][2l+2]
+                real_buffer_1 .*= real_buffer_2
+                gs            .-= real_buffer_1
             end
         end
     end

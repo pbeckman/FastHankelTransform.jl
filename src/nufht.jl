@@ -51,6 +51,8 @@ function nufht!(gs, nu, rs, cs, ws;
         # initialize temporary buffers
         in_buffer  = zeros(ComplexF64, m)
         out_buffer = zeros(ComplexF64, n)
+        real_buffer_1 = zeros(Float64, n)
+        real_buffer_2 = zeros(Float64, n)
         cheb_buffer     = zeros(Float64, NUFHT_LOC_K[]+1)
         bessel_buffer_1 = zeros(Float64, NUFHT_LOC_K[]+1)
         bessel_buffer_2 = zeros(Float64, NUFHT_LOC_K[]+1+div(nu,2)+isodd(nu))
@@ -67,7 +69,9 @@ function nufht!(gs, nu, rs, cs, ws;
         (gs, nu, rs, cs, ws) -> add_asy!(
             gs, nu, rs, cs, ws, K=NUFHT_ASY_K[], 
             in_buffer=view(in_buffer, 1:length(rs)),
-            out_buffer=view(out_buffer, 1:length(ws))
+            out_buffer=view(out_buffer, 1:length(ws)),
+            real_buffer_1=view(real_buffer_1, 1:length(ws)),
+            real_buffer_2=view(real_buffer_2, 1:length(ws))
             ),
         add_dir!
         ))
@@ -111,9 +115,8 @@ function setup_nufht!(nu, tol; z_split=nothing, K_asy=nothing, K_loc=nothing)
         global NUFHT_Z_SPLIT[] = isnothing(z_split) ? load(path * "asy_z_table.jld")["zs"][i, j, k] : z_split
         global NUFHT_LOC_K[]   = isnothing(K_loc) ? load(path * "wimp_K_table.jld")["Ks"][i, j, k] : K_loc
     else
-        # set number of Hankel expansion terms to give exact
-        # non-asymptotic expression
-        global NUFHT_ASY_K[] = Int64(nu + 1/2)
+        # set number of Hankel expansion terms to give exact formula
+        global NUFHT_ASY_K[] = Int64(nu - 1/2)
 
         # set unused constants to defaults
         global NUFHT_Z_SPLIT[] = NaN
