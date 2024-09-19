@@ -1,18 +1,23 @@
 \subsection{Comparison to direct evaluation}
 
 \red{
-  Scaling and accuracy tests against direct evaluation using point distributions for which $P = \bO(n)$
+  Scaling tests using point distributions for which 
   \begin{itemize}
-    \item Sch\"olmilch
-    \item Fourier-Bessel
-    \item Scaled roots (DHT)
+    \item $n$ grows with $m$ and $P$ constant (more sources in fixed domain)
+    \item $m$ grows with $n$ and $P$ constant (more targets in fixed domain)
+    \item $P$ grows with $n$ and $m$ constant (spreading out points)
+    \item $P = \bO(n)$
+    \item \begin{itemize}
+      \item Sch\"olmilch
+      \item Fourier-Bessel
+      \item Scaled roots
+    \end{itemize}
   \end{itemize}
-  
-  for which $n$ grows with $m$ and $P$ constant (more sources in fixed domain)
-  
-  for which $m$ grows with $n$ and $P$ constant (more targets in fixed domain)
-  
-  for which $P$ grows with $n$ and $m$ constant (spreading out points)
+
+  Accuracy tests against direct evaluation 
+  \begin{itemize}
+    \item Scaled roots for various $\nu$ and $\epsilon$
+  \end{itemize}
 }
 
 \subsection{Computing Fourier transforms of radial functions}

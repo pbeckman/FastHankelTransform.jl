@@ -11,7 +11,7 @@ magnetic resonance imaging data acquisition~\cite{}, and various signal
 processing tasks~\cite{}. To overcome this setback, Nonuniform FFT (NUFFT)
 algorithms have been developed~\cite{}. We will not provide a thorough overview
 of NUFFT algorithms, but merely say that multiple software libraries~\cite{}
-have been release which achieve near FFT speeds in one dimension, assuming that
+have been released which achieve near FFT speeds in one dimension, assuming that
 the distribution of time samples and frequency outputs is not pathological. In
 higher dimensions, NUFFTs are less competitive with standard FFTs, but the
 computational task at hand is also significantly harder.
@@ -32,7 +32,7 @@ and~$(x_1,x_2) \mapsto (r,\theta)$ the above expression becomes
 \begin{equation}
   \label{eq:ftpolar}
   \begin{aligned}
-    g(\omega, \alpha) &= \frac{1}{4\pi^2} \iint_{\R^2} 
+    g(\omega, \alpha) &= \frac{1}{4\pi^2} \int_0^{2\pi} \int_0^\infty
     f(r,\theta) \, 
     e^{-i \omega r (\cos\alpha \cos\theta + \sin\alpha \sin\theta) } 
     \, r \, dr \, d\theta \\
@@ -52,13 +52,14 @@ transform can be written as
 where we have used the integral representation of the zeroth-order Bessel
 function~\cite{olver2010nist}:
 \begin{equation}
-  J_0(x) = \frac{1}{\pi} \int_0^\pi \cos \left( x \cos \theta \right) \, d\theta.
+  J_0(x) 
+  = \frac{1}{\pi} \int_0^\pi \cos \left( x \cos \theta \right) \, d\theta.
 \end{equation}
 The integral involving~$J_0$ in equation~\eqref{eq:HT} is known as a
 \emph{Hankel Transform} of order 0 --- usually referred to simply as a Hankel
 Transform. In higher ambient dimensions, the Fourier transform of radially
 symmetric functions reduces to Hankel transforms of higher orders, a case which
-we address toward the end of this manuscript. Similarly, if the function~$f$
+we discuss toward the end of this manuscript. Similarly, if the function~$f$
 in~\eqref{eq:ftpolar} has a particular periodicity dependence in~~$\theta$,
 e.g.~$f = f(r)e^{im\theta}$, then we have
 \begin{equation}
@@ -69,7 +70,10 @@ e.g.~$f = f(r)e^{im\theta}$, then we have
   \end{aligned}
 \end{equation}
 where, again, we have invoked an integral representation
-for~$J_m$~\cite{olver2010nist}. For now, we will focus on the standard
+for~$J_m$~\cite{olver2010nist}. 
+It main result of this work is an algorithm for rapidly evaluating a discretized
+version of the above integral at a collection of~$\rho_j$.
+For now, we will focus on the standard
 (zeroth-order) Hankel transform, and return to these higher order transforms
 toward the end of the paper.
 
@@ -125,7 +129,7 @@ liu1999nonuniform}, and projection-slice or Abel transform-based methods
 \cite{oppenheim1980computation, hansen1985fast, kapur1995algorithm}.
 See~\cite{cree1993algorithms} for a review of many of these early computational
 approaches. Unfortunately, these existing methods are either not applicable to
-the discrete case, require a particular choice of $\omega_j$ or $r_k$ due to the
+the discrete case, require a particular choice of $\rho_j$ or $r_k$ due to the
 constraints of interpolation or quadrature subroutines, or suffer from low
 accuracy as a result of intermediate approximations. Therefore, extending these
 schemes to compute the fully nonuniform DHT with controllable accuracy is not
@@ -135,15 +139,19 @@ More recently, butterfly algorithms \cite{oneil2010algorithm, li2015butterfly,
 pang2020interpolative} were introduced as a broadly applicable methodology for
 rapidly computing oscillatory transforms including the nonuniform DHT. However,
 these algorithms require a precomputation or factorization stage for each new
-set of $\omega_j$ and $r_k$, which can be a bottleneck for applications in which
-these evaluation points change with each evaluation. In order to provide a
+set of $\rho_j$ and $r_k$. Such precomputations can, unfortunately, be a
+bottleneck for applications in which these evaluation points change with each
+iteration or application of the transform. In order to provide a
 precomputation-free fast DHT,~\cite{townsend2015fast} employs a combination of
 asymptotic expansions and Bessel function identities evaluated using the
 equispaced FFT. The resulting scheme is applicable to equispaced or perturbed
 ``quasi-equispaced'' grids, for example $j_{0,k} / j_{0,n+1}$ where $j_{\nu,k}$
 is the $k^{th}$ zero of $J_\nu$.
 
+
+
 \subsection*{Novelty of this work}
+\label{sec:novelty}
 
 At a high level, our algorithm can be viewed as a generalization of the one
 described in~\cite{townsend2015fast}. In~\cite{townsend2015fast}, asymptotic
@@ -153,18 +161,22 @@ computing the DHT using fast cosine transforms (FCTs) and fast sine transforms
 (FSTs). In order to invoke these fast algorithms, various assumptions
 on~$\omega_j$ and~$r_k$ had to be made.
 
-We describe here a precomputation-free fast Hankel transform (NUFHT) which
-generalizes~\cite{townsend2015fast} to the fully nonuniform setting in a number
-of ways. First, we employ an adaptive partitioning scheme which, for any choice
-of $r_k$ and $\omega_j$, subdivides $\bm{A}$ into blocks for which matrix-vector
-products can be evaluated efficiently. Second, we use the nonuniform fast
-Fourier transform (NUFFT)~\cite{dutt1993fast, greengard2004accelerating} to
-evaluate asymptotic expansions for nonuniform $r_k$ and $\omega_j$. Finally, we
-utilize the low-rank expansion of $J_\nu$ given by \cite{wimp1962polynomial} in
-the local regime where asymptotic expansions are not applicable. We derive error
-bounds for this low-rank expansion, allowing us to choose all approximation
-parameters automatically by analysis which guarantees that the resulting error
-is bounded by the user-specified tolerance $\epsilon$.
+{\color{red} Need to consolidate $\omega$, $\rho$ notation and decide if we're
+doing integration in space or frequency, just to be consistent.}
+
+We describe here a precomputation-free NonUniform Fast Hankel Transform (NUFHT)
+which generalizes~\cite{townsend2015fast} to the fully nonuniform setting in a
+number of ways. First, we employ an adaptive partitioning scheme which, for any
+choice of $\rho_j$ and $r_k$, subdivides the matrix with entries~$J_0(\rho_j r_k)$ into blocks for which
+matrix-vector products can be evaluated efficiently. Second, we use the
+nonuniform fast Fourier transform (NUFFT)~\cite{dutt1993fast,
+greengard2004accelerating} to evaluate asymptotic expansions for nonuniform
+$r_k$ and $\omega_j$. Finally, we utilize the low-rank expansion of $J_\nu$
+given by \cite{wimp1962polynomial} in the local regime where asymptotic
+expansions are not applicable. We derive error bounds for this low-rank
+expansion, allowing us to choose all approximation parameters automatically by
+analysis which guarantees that the resulting error is bounded by the
+user-specified tolerance $\epsilon$.
 
 \subsection*{Outline of the paper}
 
