@@ -32,7 +32,7 @@ FastHankelTransform.setup_nufht!(nu, tol)
 # don't allow small local boxes to be labeled as direct
 FastHankelTransform.NUFHT_LOC_K[] = 0
 
-rs = 10 .^ collect(range(0, 2, m))
+rs = 10 .^ collect(range(0.3, 2, m))
 # rs = (gausslegendre(m)[1] .+ 1) ./ 2
 cs = randn(m)
 ws = collect(range(0, 20, n))
@@ -45,8 +45,23 @@ is_split = (1:n)[(!).(isnothing.(js_split))]
 js_split = js_split[(!).(isnothing.(js_split))]
 
 w = 4
-gr(size=(300, 300))
+default(fontfamily="Computer Modern")
+Plots.scalefontsizes()
+Plots.scalefontsizes(1.25)
+gr(size=(350, 300))
 
+p0 = heatmap(
+    besselj.(nu, ws*rs'), 
+    yflip=true, 
+    axis=([], false),
+    c=reverse(palette(:Spectral)),
+    margin=0mm,
+    rightmargin=5mm,
+    colorbar_fontfamily="Helvetica"
+    )
+savefig("~/Downloads/A.pdf")
+
+gr(size=(300, 300))
 p1 = heatmap(
     (1 .+ (ws*rs' .< z)) .* ([zeros(2w); ones(m-4w); zeros(2w)]) .* ([zeros(2w); ones(m-4w); zeros(2w)])', 
     yflip=true, 

@@ -70,12 +70,11 @@ e.g.~$f = f(r)e^{im\theta}$, then we have
   \end{aligned}
 \end{equation}
 where, again, we have invoked an integral representation
-for~$J_m$~\cite{olver2010nist}. 
-It main result of this work is an algorithm for rapidly evaluating a discretized
-version of the above integral at a collection of~$\rho_j$.
-For now, we will focus on the standard
-(zeroth-order) Hankel transform, and return to these higher order transforms
-toward the end of the paper.
+for~$J_m$~\cite{olver2010nist}. It main result of this work is an algorithm for
+rapidly evaluating a discretized version of the above integral at a collection
+of~$\omega_j$. For now, we will focus on the standard (zeroth-order) Hankel
+transform, and return to these higher order transforms toward the end of the
+paper.
 
 In order to numerically compute~$g$ in~\eqref{eq:HT} at a collection of~$M$
 ``frequencies''~$\omega_j$'s, the Hankel transform must be discretized using an
@@ -111,12 +110,12 @@ chosen as~$\omega_j = j\pi$. Fourier-Bessel expansions, often used in separation
 of variables calculations for PDEs, take the frequencies~$\omega_j$ to be the
 ordered roots of~$J_0$. In the most restrictive case, as discussed
 in~\cite{johnson1987}, the frequencies~$\omega_j$ are set to be the ordered
-roots of~$J_0$, and the nodes~$r_k$ are set to be scaled roots of~$J_0$,
-i.e.~$r_k = \omega_k/\omega_{M+1}$, where~$\omega_{M+1}$ is the~$(M+1)$th
-largest root of~$J_0$ (which doesn't explicitly appear in the sum above).
-Analogues of all these special cases exist when~$J_0$ is replaced with a higher
-order bessel function~$J_m$ as well, but we do not go into the details as our
-algorithm handles them all similarly.
+roots of~$J_\nu$, and the nodes~$r_k$ a re set to be scaled roots of~$J_\nu$,
+i.e.~$r_k = \mathrm{j}_{\nu,k}/\mathrm{j}_{\nu,k+1}$ where~$\mathrm{j}_{\nu,k}$
+is the~$k$th largest root of~$J_\nu$ (which doesn't explicitly appear in the sum
+above). Analogues of all these special cases exist when~$J_0$ is replaced with a
+higher order bessel function~$J_m$ as well, but we do not go into the details as
+our algorithm handles them all similarly.
 
 \subsection*{Existing methods}
 \label{sec:existing}
@@ -129,7 +128,7 @@ liu1999nonuniform}, and projection-slice or Abel transform-based methods
 \cite{oppenheim1980computation, hansen1985fast, kapur1995algorithm}.
 See~\cite{cree1993algorithms} for a review of many of these early computational
 approaches. Unfortunately, these existing methods are either not applicable to
-the discrete case, require a particular choice of $\rho_j$ or $r_k$ due to the
+the discrete case, require a particular choice of $\omega_j$ or $r_k$ due to the
 constraints of interpolation or quadrature subroutines, or suffer from low
 accuracy as a result of intermediate approximations. Therefore, extending these
 schemes to compute the fully nonuniform DHT with controllable accuracy is not
@@ -139,7 +138,7 @@ More recently, butterfly algorithms \cite{oneil2010algorithm, li2015butterfly,
 pang2020interpolative} were introduced as a broadly applicable methodology for
 rapidly computing oscillatory transforms including the nonuniform DHT. However,
 these algorithms require a precomputation or factorization stage for each new
-set of $\rho_j$ and $r_k$. Such precomputations can, unfortunately, be a
+set of $\omega_j$ and $r_k$. Such precomputations can, unfortunately, be a
 bottleneck for applications in which these evaluation points change with each
 iteration or application of the transform. In order to provide a
 precomputation-free fast DHT,~\cite{townsend2015fast} employs a combination of
@@ -147,8 +146,6 @@ asymptotic expansions and Bessel function identities evaluated using the
 equispaced FFT. The resulting scheme is applicable to equispaced or perturbed
 ``quasi-equispaced'' grids, for example $j_{0,k} / j_{0,n+1}$ where $j_{\nu,k}$
 is the $k^{th}$ zero of $J_\nu$.
-
-
 
 \subsection*{Novelty of this work}
 \label{sec:novelty}
@@ -161,22 +158,19 @@ computing the DHT using fast cosine transforms (FCTs) and fast sine transforms
 (FSTs). In order to invoke these fast algorithms, various assumptions
 on~$\omega_j$ and~$r_k$ had to be made.
 
-{\color{red} Need to consolidate $\omega$, $\rho$ notation and decide if we're
-doing integration in space or frequency, just to be consistent.}
-
-We describe here a precomputation-free NonUniform Fast Hankel Transform (NUFHT)
+We describe here a precomputation-free nonuniform fast Hankel transform (NUFHT)
 which generalizes~\cite{townsend2015fast} to the fully nonuniform setting in a
-number of ways. First, we employ an adaptive partitioning scheme which, for any
-choice of $\rho_j$ and $r_k$, subdivides the matrix with entries~$J_0(\rho_j r_k)$ into blocks for which
-matrix-vector products can be evaluated efficiently. Second, we use the
-nonuniform fast Fourier transform (NUFFT)~\cite{dutt1993fast,
-greengard2004accelerating} to evaluate asymptotic expansions for nonuniform
-$r_k$ and $\omega_j$. Finally, we utilize the low-rank expansion of $J_\nu$
-given by \cite{wimp1962polynomial} in the local regime where asymptotic
-expansions are not applicable. We derive error bounds for this low-rank
-expansion, allowing us to choose all approximation parameters automatically by
-analysis which guarantees that the resulting error is bounded by the
-user-specified tolerance $\epsilon$.
+number of ways. First, we employ an adaptive parxtitioning scheme which, for any
+choice of $\omega_j$ and $r_k$, subdivides the matrix with
+entries~$J_\nu(\omega_j r_k)$ into blocks for which matrix-vector products can
+be evaluated efficiently. Second, we use the nonuniform fast Fourier transform
+(NUFFT)~\cite{dutt1993fast, greengard2004accelerating} to evaluate asymptotic
+expansions for nonuniform $r_k$ and $\omega_j$. Finally, we utilize the low-rank
+expansion of $J_\nu$ given by \cite{wimp1962polynomial} in the local regime
+where asymptotic expansions are not applicable. We derive error bounds for this
+low-rank expansion, allowing us to choose all approximation parameters
+automatically by analysis which guarantees that the resulting error is bounded
+by the user-specified tolerance $\epsilon$.
 
 \subsection*{Outline of the paper}
 

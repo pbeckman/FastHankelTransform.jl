@@ -2,7 +2,7 @@
 function generate_tables()
     nus_all   = 0:0.5:100 
     nus_int   = 0:100
-    tols      = [1e-4, 1e-8, 1e-12, 1e-15]
+    tols      = 10.0 .^ (-4:-1:-15)
     max_asy_K = 10
     asy_Ks    = 1:max_asy_K
 
@@ -61,17 +61,16 @@ function generate_asy_z_table(nus, asy_Ks, tols)
 end
 
 # exponent in Siegel's bound
-beta(p) = log(p) + sqrt(1 - p^2) - log(1 + sqrt(1-p^2))
+psi(p) = log(p) + sqrt(1 - p^2) - log(1 + sqrt(1-p^2))
 
 function wimp_error_bound(nu, K, z)
     @assert z <= 2K + nu
 
-    p   = z / (nu + 2K)
-    b_K = beta(p)
+    b_K = psi(z / (2K + 2 + nu))
 
-    if 2K > nu && z <= 2K - nu
-        q   = z / (2K - nu)
-        c_K = beta(q)
+    # determine if Siegel's bound is valid for J_{nu/2-l}
+    if 2K - nu > 0 && z / (2K - nu) <= 1
+        c_K = psi(z / (2K + 2 - nu))
 
         return 2*exp(b_K*(nu/2 + K + 1) + c_K*(-nu/2 + K + 1)) / (1 - exp(b_K + c_K))
     else

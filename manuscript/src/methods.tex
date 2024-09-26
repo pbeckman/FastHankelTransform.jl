@@ -1,28 +1,4 @@
 
-
-\subsection{Determining order of expansions crossover point}
-
-With these error bounds in hand, we precompute the following tables for
-tolerances $\epsilon = \texttt{1e-4}, \dots, \texttt{1e-15}$, orders $\nu = 1,
-\dots, 100$, and number of asymptotic expansion terms $M = 1, \dots, 20$
-\begin{list}{$\circ$}{}
-    \item $z_{\nu, \epsilon}^M$ such that the $M$-term asymptotic expansion of
-    $J_\nu(\omega r)$ is $\epsilon$-accurate for all $\omega r > z_{\nu,
-    \epsilon}^M$
-    \item $L_{\nu, \epsilon}^M$ such that the $L_{\nu, \epsilon}^M$-term Wimp
-    expansion of $J_\nu(\omega r)$ is $\epsilon$-accurate for all $\omega r \leq
-    z_{\nu, \epsilon}^M$
-\end{list}
-Therefore, for any order $\nu$ we can look up a pair of complementary local and
-asymptotic expansions with error everywhere bounded by the requested tolerance
-$\epsilon$. The only remaining free parameter is the number of asymptotic terms
-$M$. This parameter is selected heuristically in our implementation as 
-\begin{align} \label{eq:num-asy-terms}
-    M = \min\left(\flr{1 + \frac{\nu}{5} - \frac{\log_{10}(\epsilon)}{4}}, 20\right)
-\end{align}
-according to numerical experiments which maximize speed by balancing the cost of
-the local, asymptotic, and direct evaluations.
-
 \subsection{Subdividing the matrix into blocks by expansion}
 
 Having established error bounds which allow us to automatically select the
@@ -96,27 +72,27 @@ small collection.
 
 We now analyze the computational complexity of the proposed approach. In order
 to do so, we must first comment on the complexity of the NUFFT, which is an
-important subroutine in our method. Nearly all analysis-based NUFFT codes ---
+important subroutine in our method. Most analysis-based NUFFT codes ---
 including the FINUFFT library \cite{barnett2019parallel} which we use in our
 NUFHT implementation --- consist of three steps. First, delta masses centered at
 each non-uniform point are convolved with a \textit{spreading function} which
 smears them onto a fine $N$-point uniform grid. Then, a standard equispaced FFT
 is computed on the fine grid. Finally, a diagonal de-convolution with the
 Fourier transform of the spreading function is applied to reverse the effect of
-the original smearing. For a more complete description of the NUFFT, see
-\todocite. For $n$ locations $r_k$ and $m$ frequencies $\omega_j$, the dominant
-costs in the NUFFT are... \red{explain spreading and FFT costs, why fine grid
-size $N$ scales like $\bO(n)$ for type-I, $\bO(m)$ for type-II, and like the
-space-frequency product $\bO(\Omega R)$ for type-III.}
+the original smearing. For a more complete description of this NUFFT method, see
+\cite{dutt1993fast,greengard2004accelerating,barnett2019parallel}. For $n$
+points $r_k$ and $m$ frequencies $\omega_j$, spreading of each input point is
+$\bO(n)$, the FFT on the fine grid is $\bO(N\log N)$, and the deconvolution of
+each output frequency is $\bO(m)$. 
 
-\begin{theorem}
-    Take $\omega_1 < \dots < \omega_m \in [0,\infty)$ and $r_1 < \dots < r_n \in
-    [0,\infty)$ and define the space-frequency product $p := (\omega_m -
-    \omega_1)(r_n - r_1)$. Then the computational cost of computing the NUFHT to
-    tolerance $\epsilon$ using Algorithm \ref{alg:nufht} is 
-    $$\bO\bigg(\Big((M + L)(m + n) + Mp\log p\Big) \log \min(n,m) \bigg)$$ where
-    $L$ and $M$ are the number of local and asymptotic terms respectively chosen
-    according to $\epsilon$.
+\begin{theorem} \label{thm:complexity} Take $\omega_1 < \dots < \omega_m \in
+    [0,\infty)$ and $r_1 < \dots < r_n \in [0,\infty)$ and define the
+    space-frequency product $p := (\omega_m - \omega_1)(r_n - r_1)$. Then the
+    complexity of computing the NUFHT of order $\nu$ to tolerance $\epsilon$
+    using Algorithm \ref{alg:nufht} is 
+    $$\bO\Big((L + M)(m + n) \log \min(n,m) + Mp\log p\Big)$$ where $L$ and $M$
+    are the number of local and asymptotic terms respectively chosen according
+    to $\nu$ and $\epsilon$.
 \end{theorem}
 
 \begin{proof}
@@ -129,7 +105,7 @@ space-frequency product $\bO(\Omega R)$ for type-III.}
 
     Otherwise consider the case where $\mtx{A}$ contains both local and
     asymptotic entries. Without loss of generality assume $\omega_1 \leq
-    \frac{z}{r_n} < \omega_2$ and $r_1 \leq \frac{z}{\omega_m} < r_2$, since
+    \frac{z}{r_n} < \omega_2$ and $r_1 \leq \frac{z}{\omega_m} < r_2$, because
     otherwise we have blocks which can be evaluated using a single expansion as
     just described without affecting the complexity.
 
@@ -140,7 +116,7 @@ space-frequency product $\bO(\Omega R)$ for type-III.}
     $\sum_{b=1}^{2^{\ell-1}} m_{\ell,b}^{(\text{loc})} \leq m$ and
     $\sum_{b=1}^{2^{\ell-1}} n_{\ell,b}^{(\text{loc})} \leq n$. An analogous
     fact holds for the asymptotic blocks. The number of levels
-    $N_{\text{level}}$ scales like $\bO(\log\min(n,m))$ \red{(CHECK)}. 
+    $N_{\text{level}}$ scales like $\bO(\log\min(n,m))$. 
     
     Therefore, the total cost of local evaluation is 
     \begin{align}
@@ -149,8 +125,10 @@ space-frequency product $\bO(\Omega R)$ for type-III.}
         &= \bO\big(L (m + n) \log \min(n,m)\big).
     \end{align}
     Let $p_{\ell,b}$ be the space-frequency product of box $b$ at level $\ell$.
-    As the total space frequency product is $p$ and all asymptotic boxes occupy
-    disjoint sub-rectangles of $[\omega_1, \omega_m] \times [r_1, r_n]$, we have
+    The total space frequency product $p$ is the area of the rectangle $R :=
+    [\omega_1, \omega_m] \times [r_1, r_n]$, and all asymptotic boxes occupy
+    disjoint sub-rectangles of $R$. Therefore, by a simple geometric argument
+    the sum of their areas is bounded by the area of $R$, so that
     $\sum_{\ell=1}^{N_{\text{level}}} \sum_{b=1}^{2^{\ell-1}} p_{\ell,b} \leq
     p$. Then by H\"older's inequality we obtain 
     \begin{align} 
@@ -161,7 +139,8 @@ space-frequency product $\bO(\Omega R)$ for type-III.}
     The total cost of asymptotic evaluation via the Type-III NUFFT is therefore
     \begin{align}
         & \sum_{\ell=1}^{N_{\text{level}}} \sum_{b=1}^{2^{\ell-1}} \bO\left(M\left(m_{\ell,b}^{(\text{asy})} + n_{\ell,b}^{(\text{asy})} + p_{\ell,b}^{(\text{asy})} \log p_{\ell,b}^{(\text{asy})} \right)\right) \\
-        &\hspace*{0.2\textwidth} = \bO\big(M (m + n + p\log p) \log \min(n,m) \big).
+        &\hspace*{0.2\textwidth} = \sum_{\ell=1}^{N_{\text{level}}} \bO(M(m + n)) + \sum_{\ell=1}^{N_{\text{level}}} \sum_{b=1}^{2^{\ell-1}} \bO\Big(M\Big(p_{\ell,b}^{(\text{asy})} \log p_{\ell,b}^{(\text{asy})}\Big)\Big) \\
+        &\hspace*{0.2\textwidth} = \bO\big(M (m + n) \log \min(n,m) + Mp\log p\big).
     \end{align}
     We subdivide until all direct blocks are all of size $m_b \times n_b$ with
     $m_bn_b = \bO(1)$. Thus the cost of computing the dense matvec with each
@@ -172,16 +151,14 @@ space-frequency product $\bO(\Omega R)$ for type-III.}
 
 In typical applications the domain of integration $[0,R]$ is fixed by e.g. the
 support of the function $f$ whose Fourier transform is desired, and the maximum
-frequency at which the transform is desired grows with $n$. The following
-corollary studies this common scenario, and shows that the complexity of our
-algorithm agrees with \cite{townsend2015fast} up to a $\log\log n$ factor for
-special cases including Schl\"omilch and Fourier-Bessel expansions. For
-notational conciseness, we consider the number of terms $L$ and $M$ in each
-expansion as constants here.
-\begin{corollary}
-    Take $\omega_1 < \dots < \omega_n \in [0,\infty)$ and $r_1 < \dots < r_n \in
-    [0,\infty)$ such that the space-frequency product $p = \bO(n)$. Then the
-    computational cost of Algorithm \ref{alg:nufht} is $\bO(n\log^2n)$.
+frequency at which the transform is computed grows with $n$. The following
+corollary studies this common scenario, which includes Schl\"omilch and
+Fourier-Bessel expansions. For notational conciseness, we consider the number of
+terms $L$ and $M$ in each expansion as constants here.
+\begin{corollary} \label{cor:complexity} Take $\omega_1 < \dots < \omega_n \in
+    [0,\infty)$ and $r_1 < \dots < r_n \in [0,\infty)$ such that the
+    space-frequency product $p = \bO(n)$. Then the complexity of computing the
+    NUFHT using Algorithm \ref{alg:nufht} is $\bO(n\log n)$.
 \end{corollary}
 
 \begin{remark}

@@ -103,7 +103,7 @@ function setup_nufht!(nu, tol; z_split=nothing, K_asy=nothing, K_loc=nothing)
     global NUFHT_ASY_COEF[] = load(path * "asy_a_table.jld")["as"][Int64(2nu + 1), :]
 
     # set tolerance
-    j = max(1, ceil(Int64, -log10(tol) / 4))
+    j = max(1, ceil(Int64, -log10(tol) - 3))
     global NUFHT_TOL[] = tol
 
     if isinteger(nu)
