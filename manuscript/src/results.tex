@@ -19,6 +19,37 @@ summation does not. Therefore, if a DHT is desired with relatively few points
 with a very large space-frequency product, direct summation may give superior
 performance, although such circumstances are rare in practice.
 
+\begin{figure}[!t]
+  \centering
+  \newcommand\twa{0.29cm} \newcommand\tw{0.43cm}
+  \begin{subfigure}[b]{0.32\textwidth}
+    \begin{tikzpicture}
+        \draw (0, 0) node[inner sep=0]
+        {\includegraphics[width=\textwidth]{./figures/n_scaling.pdf}}; \draw
+        (1.4, 0.1) node {\small $\bO(n)$};
+    \end{tikzpicture}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.32\textwidth}
+    \begin{tikzpicture}
+        \draw (0, 0) node[inner sep=0]
+        {\includegraphics[width=\textwidth]{./figures/m_scaling.pdf}}; \draw
+        (1.4, 0.1) node {\small $\bO(m)$};
+    \end{tikzpicture}
+  \end{subfigure}
+  \hfill 
+  \begin{subfigure}[b]{0.32\textwidth}
+    \begin{tikzpicture}
+        \draw (0, 0) node[inner sep=0]
+        {\includegraphics[width=\textwidth]{./figures/p_scaling.pdf}}; \draw
+        (1.2, -0.4) node {\small $\bO(p\log p)$};
+    \end{tikzpicture}
+  \end{subfigure}
+  \caption{Scaling with $n$, $m$, and $p$.}
+  \label{fig:nmp-scaling}
+\end{figure}
+
+
 Next, we study the more typical scenario where the space-frequency product $p$
 grows linearly with $n$, as discussed in Corollary~\ref{cor:complexity}. Here we
 study two cases. First, we consider the Fourier-Bessel expansion where $\omega_j
@@ -37,7 +68,7 @@ calculation
 shows that if we subdivide a block with space frequency product $\Omega R$ at a
 point $(\omega, r)$ which lies on the curve $\omega r = z$, then the largest
 possible space-frequency product $p$ for the resulting lower right asymptotic
-block is achieved by taking $\omega$ to be the mid-point of $[\frac{z}{R},
+block is achieved by taking $\omega$ to be the mid-point of $[z/R, 
 \Omega]$ on a log scale. In other words, points and frequencies which are
 exponentially distributed result in the highest possible space-frequency product
 $p$ for every asymptotic block at every level. From
@@ -82,37 +113,8 @@ digits of accuracy for transforms of size $n=10^7$. This is a well-known
 limitation of existing NUFFT methods, for which the error generally scales like
 $n$ times machine precision \cite[Remark 9]{barnett2019parallel}.
 
-\begin{figure}
-  \centering
-  \newcommand\twa{0.29cm} \newcommand\tw{0.43cm}
-  \begin{subfigure}[b]{0.32\textwidth}
-    \begin{tikzpicture}
-        \draw (0, 0) node[inner sep=0]
-        {\includegraphics[width=\textwidth]{./figures/n_scaling.pdf}}; \draw
-        (1.4, 0.1) node {\small $\bO(n)$};
-    \end{tikzpicture}
-  \end{subfigure}
-  \hfill
-  \begin{subfigure}[b]{0.32\textwidth}
-    \begin{tikzpicture}
-        \draw (0, 0) node[inner sep=0]
-        {\includegraphics[width=\textwidth]{./figures/m_scaling.pdf}}; \draw
-        (1.4, 0.1) node {\small $\bO(m)$};
-    \end{tikzpicture}
-  \end{subfigure}
-  \hfill 
-  \begin{subfigure}[b]{0.32\textwidth}
-    \begin{tikzpicture}
-        \draw (0, 0) node[inner sep=0]
-        {\includegraphics[width=\textwidth]{./figures/p_scaling.pdf}}; \draw
-        (1.2, -0.4) node {\small $\bO(p\log p)$};
-    \end{tikzpicture}
-  \end{subfigure}
-  \caption{Scaling with $n$, $m$, and $p$.}
-  \label{fig:nmp-scaling}
-\end{figure}
 
-\begin{figure}
+\begin{figure}[!t]
   \centering
   \begin{subfigure}[b]{0.32\textwidth}
     \begin{tikzpicture}
@@ -134,9 +136,9 @@ $n$ times machine precision \cite[Remark 9]{barnett2019parallel}.
   \label{fig:both-scaling}
 \end{figure}
 
-\begin{figure}
+\begin{figure}[!t]
   \centering
-  \includegraphics[width=0.4\textwidth]{./figures/accuracy.pdf}
+  \includegraphics[width=0.6\textwidth]{./figures/accuracy.pdf}
   \caption{Relative 2-norm error $\norm[2]{\vct{g} - \vct{\tilde{g}}} /
   \norm[2]{\vct{g}}$ as a function of tolerance $\epsilon$ for a DHT of order
   $0$ for various $n$.}
@@ -194,7 +196,7 @@ bottleneck, and the necessary NUFFT becomes prohibitively large.
 
 Using spherical Bessel function identities \cite[10.47.3,
 10.49.2]{olver2010nist}, one can see that for half-integer $\nu$, Hankel's
-expansion (\ref{eq:asymptotic-expansion}) is no longer just an asymptotic
+expansion~\eqref{eq:asymptotic-expansion} is no longer just an asymptotic
 expansion, but an exact formula.
 % \begin{align} J_{\frac{d}{2}-1}(z) &= \sqrt{\frac{2z}{\pi}}
 %   j_{\frac{d-3}{2}}(z) \\
@@ -205,9 +207,9 @@ expansion, but an exact formula.
 %     \end{align} where $\mu := z - \frac{(2\nu+1)\pi}{4}$. 
 For example, the kernel of the integral transform in (\ref{eq:radial-fourier})
 for $d = 3$ is
-\begin{align}
+\begin{equation}
   J_{\frac{1}{2}}(z) = \sqrt{\frac{2}{\pi z}} \sin(z),
-\end{align}
+\end{equation}
 and the corresponding NUFHT can be evaluated using a single NUFFT.
 
 The curse of dimensionality demonstrated in the two-dimensional case only
