@@ -158,19 +158,20 @@ computing the DHT using fast cosine transforms (FCTs) and fast sine transforms
 (FSTs). In order to invoke these fast algorithms, various assumptions
 on~$\omega_j$ and~$r_k$ had to be made.
 
-We describe here a precomputation-free nonuniform fast Hankel transform (NUFHT)
-which generalizes~\cite{townsend2015fast} to the fully nonuniform setting in a
-number of ways. First, we employ an adaptive parxtitioning scheme which, for any
-choice of $\omega_j$ and $r_k$, subdivides the matrix with
-entries~$J_\nu(\omega_j r_k)$ into blocks for which matrix-vector products can
-be evaluated efficiently. Second, we use the nonuniform fast Fourier transform
-(NUFFT)~\cite{dutt1993fast, greengard2004accelerating} to evaluate asymptotic
-expansions for nonuniform $r_k$ and $\omega_j$. Finally, we utilize the low-rank
-expansion of $J_\nu$ given by \cite{wimp1962polynomial} in the local regime
-where asymptotic expansions are not applicable. We derive error bounds for this
-low-rank expansion, allowing us to choose all approximation parameters
-automatically by analysis which guarantees that the resulting error is bounded
-by the user-specified tolerance $\epsilon$.
+We describe here a nonuniform fast Hankel transform (NUFHT) that does not
+require any precomputation, and which generalizes~\cite{townsend2015fast} to the
+fully nonuniform setting in a number of ways. First, we employ an adaptive
+parxtitioning scheme which, for any choice of $\omega_j$ and $r_k$, subdivides
+the matrix with entries~$J_\nu(\omega_j r_k)$ into blocks for which
+matrix-vector products can be evaluated efficiently. Second, we use the
+nonuniform fast Fourier transform (NUFFT)~\cite{dutt1993fast,
+greengard2004accelerating} to evaluate asymptotic expansions for nonuniform
+$r_k$ and $\omega_j$. Finally, we utilize the low-rank expansion of $J_\nu$
+given by \cite{wimp1962polynomial} in the local regime where asymptotic
+expansions are not applicable. We derive error bounds for this low-rank
+expansion, allowing us to choose all approximation parameters automatically by
+analysis which guarantees that the resulting error is bounded by the
+user-specified tolerance $\epsilon$.
 
 \subsection*{Outline of the paper}
 
