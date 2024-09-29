@@ -113,8 +113,7 @@ digits of accuracy for transforms of size $n=10^7$. This is a well-known
 limitation of existing NUFFT methods, for which the error generally scales like
 $n$ times machine precision \cite[Remark 9]{barnett2019parallel}.
 
-
-\begin{figure}[!t]
+\begin{figure}[t]
   \centering
   \begin{subfigure}[b]{0.32\textwidth}
     \begin{tikzpicture}
@@ -136,7 +135,7 @@ $n$ times machine precision \cite[Remark 9]{barnett2019parallel}.
   \label{fig:both-scaling}
 \end{figure}
 
-\begin{figure}[!t]
+\begin{figure}[t]
   \centering
   \includegraphics[width=0.6\textwidth]{./figures/accuracy.pdf}
   \caption{Relative 2-norm error $\norm[2]{\vct{g} - \vct{\tilde{g}}} /
@@ -144,6 +143,7 @@ $n$ times machine precision \cite[Remark 9]{barnett2019parallel}.
   $0$ for various $n$.}
   \label{fig:accuracy}
 \end{figure}
+
 
 \subsection{Computing Fourier transforms of radial functions}
 
