@@ -83,7 +83,13 @@ the original smearing. For a more complete description of this NUFFT method, see
 \cite{dutt1993fast,greengard2004accelerating,barnett2019parallel}. For $n$
 points $r_k$ and $m$ frequencies $\omega_j$, spreading of each input point is
 $\bO(n)$, the FFT on the fine grid is $\bO(N\log N)$, and the deconvolution of
-each output frequency is $\bO(m)$. 
+each output frequency is $\bO(m)$. For the Type-III NUFFT, the size $N$ of the
+fine grid typically scales linearly with the space-frequency product $p :=
+(\omega_m - \omega_1)(r_n - r_1)$ \cite{barnett2019parallel,
+greengard2004accelerating}. Therefore the total cost of the NUFFT is $\bO(n + m
++ p\log p)$. Applying this fact in each asymptotic block in the Hankel transform
+matrix, and adding the cost of applying local and direct blocks, we can now
+analyze the complexity of the entire NUFHT method.
 
 \begin{theorem} \label{thm:complexity} Take $\omega_1 < \dots < \omega_m \in
     [0,\infty)$ and $r_1 < \dots < r_n \in [0,\infty)$ and define the
@@ -127,10 +133,10 @@ each output frequency is $\bO(m)$.
     Let $p_{\ell,b}$ be the space-frequency product of box $b$ at level $\ell$.
     The total space frequency product $p$ is the area of the rectangle $R :=
     [\omega_1, \omega_m] \times [r_1, r_n]$, and all asymptotic boxes occupy
-    disjoint sub-rectangles of $R$. Therefore, by a simple geometric argument
-    the sum of their areas is bounded by the area of $R$, so that
-    $\sum_{\ell=1}^{N_{\text{level}}} \sum_{b=1}^{2^{\ell-1}} p_{\ell,b} \leq
-    p$. Then by H\"older's inequality we obtain 
+    disjoint sub-rectangles of $R$. Therefore the sum of their areas is bounded
+    by the area of $R$, so that $\sum_{\ell=1}^{N_{\text{level}}}
+    \sum_{b=1}^{2^{\ell-1}} p_{\ell,b} \leq p$. Then by H\"older's inequality we
+    obtain 
     \begin{align} 
         \sum_{\ell=1}^{N_{\text{level}}} \sum_{b=1}^{2^{\ell-1}} p_{\ell,b} \log p_{\ell,b}
         \leq \left( \sum_{\ell=1}^{N_{\text{level}}} \sum_{b=1}^{2^{\ell-1}} p_{\ell,b} \right) \left(\max_{\ell,b} \log p_{\ell,b} \right) 
@@ -152,8 +158,8 @@ each output frequency is $\bO(m)$.
 In typical applications the domain of integration $[0,R]$ is fixed by e.g. the
 support of the function $f$ whose Fourier transform is desired, and the maximum
 frequency at which the transform is computed grows with $n$. The following
-corollary studies this common scenario, which includes Schl\"omilch and
-Fourier-Bessel expansions. For notational conciseness, we consider the number of
+corollary studies this common scenario, which includes Schl\"omilch expansions
+and Fourier-Bessel series. For notational conciseness, we consider the number of
 terms $L$ and $M$ in each expansion as constants here.
 \begin{corollary} \label{cor:complexity} Take $\omega_1 < \dots < \omega_n \in
     [0,\infty)$ and $r_1 < \dots < r_n \in [0,\infty)$ such that the

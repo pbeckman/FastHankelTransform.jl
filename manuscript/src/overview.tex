@@ -23,16 +23,17 @@ $J_0$, as well as the accuracy of these local and asymptotic expansions.
 
 By analyzing the error in these two expansions, we can choose a threshold $z$
 such that an $L$-term local expansion and an $M$-term asymptotic expansion are
-both guaranteed to be accurate to the desired accuracy $\epsilon$ in the regions
-$\omega_j r_k \leq z$ and $\omega_j r_k > z$ respectively. Next, we adaptively
-subdivide $\mtx{A}$ into disjoint blocks so that either $\omega_j r_k \leq z$ or
-$\omega_j r_k > z$ for all $\omega_j$ and all $r_k$ in each block. This leaves
-only a few small blocks with $\omega_j r_k \approx z$ whose entries are directly
-computed. Finally, we apply each of these disjoint blocks of $\mtx{A}$ to
-$\vct{f}$ using the corresponding fast method. Figure~\ref{fig:subdivide} shows
-an Hankel transform matrix $\mtx{A}$ divided into local and asymptotic entries
-along the curve $\omega r = z$, as well as the corresponding adaptive
-subdivision of the matrix into blocks which can be rapidly applied.
+both guaranteed to be accurate to the desired tolerance $\epsilon$ in the
+regions $\omega_j r_k \leq z$ and $\omega_j r_k > z$ respectively. Next, we
+adaptively subdivide $\mtx{A}$ into disjoint blocks so that either $\omega_j r_k
+\leq z$ or $\omega_j r_k > z$ for all $\omega_j$ and all $r_k$ in each block.
+This leaves only a few small blocks with $\omega_j r_k \approx z$ whose entries
+can be directly computed. Finally, we apply each of these disjoint blocks of
+$\mtx{A}$ to $\vct{f}$ using the corresponding fast method.
+Figure~\ref{fig:subdivide} shows an Hankel transform matrix $\mtx{A}$ divided
+into local and asymptotic entries along the curve $\omega r = z$, as well as the
+corresponding adaptive subdivision of the matrix into blocks which can be
+rapidly applied.
 
 \begin{figure}
   \centering

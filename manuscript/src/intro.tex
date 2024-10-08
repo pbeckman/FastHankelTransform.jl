@@ -1,28 +1,28 @@
 
-The Fast Fourier Transform (FFT) has revolutionized a wide range of fields in
-mathematics, engineering, physics, etc., by enabling various signal processing
-and Fourier analysis tasks to be performed using a computational cost which
-scales quasi-linearly with the number of data points~$N$, up to Nyquist sampling
-constraints. However, the FFT is an algebraic algorithm, and requires that the
-input signal be sampled at equispaced points in time and that the desired output
-frequencies are equispaced on the integers. These assumptions are frequently not
-met in many applications, such as adaptive numerical PDE solvers~\cite{},
-magnetic resonance imaging data acquisition~\cite{}, and various signal
-processing tasks~\cite{}. To overcome this setback, Nonuniform FFT (NUFFT)
-algorithms have been developed~\cite{}. We will not provide a thorough overview
-of NUFFT algorithms, but merely say that multiple software libraries~\cite{}
-have been released which achieve near FFT speeds in one dimension, assuming that
-the distribution of time samples and frequency outputs is not pathological. In
-higher dimensions, NUFFTs are less competitive with standard FFTs, but the
-computational task at hand is also significantly harder.
+The Fast Fourier Transform (FFT) has revolutionized a wide range of applications
+in mathematics, engineering, physics, etc., by enabling signal processing and
+Fourier analysis tasks to be performed using a computational cost which scales
+quasi-linearly with the number of data points~$n$. However, the FFT requires
+that the input signal be sampled at equispaced points in time and that the
+desired output frequencies are equispaced on the integers. These assumptions are
+frequently not met in applications such as adaptive numerical PDE
+solvers~\cite{}, magnetic resonance imaging~\cite{}, and various signal
+processing tasks~\cite{}. To overcome this setback, nonuniform FFT (NUFFT)
+algorithms have been developed~\cite{dutt1993fast,greengard2004accelerating}.
+Multiple software libraries~\cite{barnett2019parallel} have been developed which
+achieve near FFT speeds in one dimension, assuming that the distribution of time
+samples and frequency outputs is not pathological. In higher dimensions, NUFFTs
+are less competitive with standard FFTs, but the computational task at hand is
+also significantly harder.
 
-The FFT grew out of a need to perform Fourier analysis in Cartesian coordinates.
-However, depending on the particular problem, the associated continuous Fourier
-analysis might be better suited to other coordinate systems. One such commonly
-encountered situation is taking the Fourier transform of radially symmetric
-functions in dimensions~$ d \geq 2$. This arises frequently in spatial
-statistics~\cite{}, fast algorithms for PDEs~\cite{}, and imaging~\cite{}. For
-example, in two dimensions, the Fourier transform of a function~$f$ is given as:
+The FFT grew out of a need to perform Fourier transforms in Cartesian
+coordinates. However, depending on the particular problem, the relevant
+continuous Fourier analysis might be better suited to other coordinate systems.
+One such commonly encountered situation is computing the Fourier transform of
+radially symmetric functions in dimensions~$d \geq 2$. This arises frequently in
+spatial statistics~\cite{}, fast algorithms for PDEs~\cite{}, and
+imaging~\cite{}. For example, in two dimensions, the Fourier transform of a
+function~$f$ is given as:
 \begin{equation}
   g(\omega_1, \omega_2) = \frac{1}{4\pi^2} \iint_{\R^2} f(x_1, x_2) \, 
   e^{-i(\omega_1 x_1 + \omega_2 x_2)}  \, dx_1 \, dx_2.
@@ -39,8 +39,8 @@ and~$(x_1,x_2) \mapsto (r,\theta)$ the above expression becomes
   &= \frac{1}{4\pi^2} \int_0^{2\pi} \int_0^\infty f(r,\theta) \, e^{-i \omega r \cos(\alpha-\theta) } \, r \, dr \, d\theta.
   \end{aligned}
 \end{equation}
-Furthermore, if~$f$ is radially symmetric, i.e.~$f = f(r)$, then the above
-transform can be written as
+Furthermore, if~$f$ is radially symmetric, i.e.~$f(r, \theta) = f(r)$, then the
+above transform can be written as
 \begin{equation}
   \label{eq:HT}
   \begin{aligned}
@@ -58,53 +58,52 @@ function~\cite{olver2010nist}:
 The integral involving~$J_0$ in equation~\eqref{eq:HT} is known as a
 \emph{Hankel Transform} of order 0 --- usually referred to simply as a Hankel
 Transform. In higher ambient dimensions, the Fourier transform of radially
-symmetric functions reduces to Hankel transforms of higher orders, a case which
-we discuss toward the end of this manuscript. Similarly, if the function~$f$
-in~\eqref{eq:ftpolar} has a particular periodicity dependence in~~$\theta$,
-e.g.~$f = f(r)e^{im\theta}$, then we have
-\begin{equation}
+symmetric functions reduces to Hankel transforms of higher orders, which we
+treat toward the end of this manuscript. 
+
+Similarly, if the function~$f$ in~\eqref{eq:ftpolar} has a particular periodic
+dependence in~$\theta$, e.g.~$f(r,\theta) = f(r)e^{ik\theta}$, then we have
+\begin{equation} \label{eq:FB-integral}
   \begin{aligned}
   g(\omega,\alpha) &= \frac{1}{4\pi^2} \int_0^\infty f(r) \, r \int_0^{2\pi} 
-  e^{-i \omega r \cos(\alpha - \theta) } \, e^{im\theta}  \, d\theta \, dr \\
-  &= \frac{i^m}{2\pi} \int_0^\infty f(r) \, r \, J_m(\omega r)  \, dr,
+  e^{-i \omega r \cos(\alpha - \theta) } \, e^{ik\theta}  \, d\theta \, dr \\
+  &= \frac{i^k}{2\pi} \int_0^\infty f(r) \, r \, J_k(\omega r)  \, dr,
   \end{aligned}
 \end{equation}
 where, again, we have invoked an integral representation
-for~$J_m$~\cite{olver2010nist}. It main result of this work is an algorithm for
-rapidly evaluating a discretized version of the above integral at a collection
-of~$\omega_j$. For now, we will focus on the standard (zeroth-order) Hankel
-transform, and return to these higher order transforms toward the end of the
-paper.
+for~$J_k$~\cite{olver2010nist}. 
 
-In order to numerically compute~$g$ in~\eqref{eq:HT} at a collection of~$M$
-``frequencies''~$\omega_j$'s, the Hankel transform must be discretized using an
-appropriate quadrature that depends on the particular class of~$f$ for which the
-integral is desired. Ignoring various corner cases, this results in the need for
-computing
+In order to numerically compute~$g$ in~\eqref{eq:HT} or~\eqref{eq:FB-integral}
+at a collection of~$m$ ``frequencies''~$\omega_j$'s, the Hankel transform must
+be discretized using an appropriate quadrature that depends on the particular
+class of~$f$ for which the integral is desired. In general this results in the
+need for computing
 \begin{equation} \label{eq:DHT}
   \begin{aligned}
   g(\omega_j) \approx 
-  g_j &:= \sum_{k=1}^N w_k \, f(r_k) \, r_k \, J_0(\omega_j r_k) \\
-  &\ = \sum_{k=1}^N c_k \, J_0(\omega_j r_k)
+  g_j &:= \sum_{k=1}^N w_k \, f(r_k) \, r_k \, J_\nu(\omega_j r_k) \\
+  &\ = \sum_{k=1}^N c_k \, J_\nu(\omega_j r_k)
    \qquad \text{for } j = 1, \ldots, M.
   \end{aligned}
 \end{equation}
-The above sum will be referred to as the Discrete Hankel Transform (DHT). 
+The above sum will be referred to as the Discrete Hankel Transform (DHT) of
+order $\nu$. 
 
 In our motivating example --- computing the continuous Fourier transform --- the
 DHT arises from the discretization of the radially symmetric Fourier integral.
 The DHT also appears in a wide range of applications including
-imaging~\cite{higgins1988hankel, zhao2013fourier}, statistics~\cite{lord1954a,
-genton2002nonparametric}, and separation of variables methods in partial
-differential equations~\cite{bisseling1985fast,ali1999generalized}. In many such
-applications, a fully nonuniform DHT is desired, as the relevant frequencies
-$\omega_j$ may not be equispaced, and the most efficient quadrature rule for
-discretizing (\ref{eq:HT}) may have nodes $r_k$ which are also not equispaced.
-It is enough to consider the above sum mere with the coefficients~$c_k$. The
-algorithm of this work allows for arbitrary selection of the
-frequencies~$\omega_j$ and nodes~$r_k$, in contrast to other algorithms which
-require some structure to their location (e.g. equispaced). There are a few
-types of commonly encountered DHTs, all of which our algorithm can address.
+imaging~\cite{higgins1988hankel, zhao2013fourier, marshall2023fast},
+statistics~\cite{lord1954a, genton2002nonparametric}, and separation of
+variables methods in partial differential
+equations~\cite{bisseling1985fast,ali1999generalized, zhou2022spectral}. In many
+such applications, a fully nonuniform DHT is desired, as the relevant
+frequencies $\omega_j$ may not be equispaced, and the most efficient quadrature
+rule for discretizing (\ref{eq:HT}) may have nodes $r_k$ which are also not
+equispaced. It is enough to consider the above sum mere with the
+coefficients~$c_k$. The algorithm of this work allows for arbitrary selection of
+the frequencies~$\omega_j$ and nodes~$r_k$, in contrast to other algorithms
+which require some structure to their location (e.g. equispaced). There are a
+few types of commonly encountered DHTs, all of which our algorithm can address.
 Schl\"omilch expansions~\cite{} take~$r_k \in [0,1]$ and the frequencies are
 chosen as~$\omega_j = j\pi$. Fourier-Bessel expansions, often used in separation
 of variables calculations for PDEs, take the frequencies~$\omega_j$ to be the
@@ -123,16 +122,29 @@ our algorithm handles them all similarly.
 A number of methods exist in the literature to evaluate (\ref{eq:HT}) and
 (\ref{eq:DHT}). These include series expansion methods
 \cite{lord1954b,brunol1977fourier,cavanagh1979numerical}, convolutional
-approaches \cite{siegman1977quasi, johansen1979fast, mook1983algorithm,
-liu1999nonuniform}, and projection-slice or Abel transform-based methods
-\cite{oppenheim1980computation, hansen1985fast, kapur1995algorithm}.
-See~\cite{cree1993algorithms} for a review of many of these early computational
-approaches. Unfortunately, these existing methods are either not applicable to
-the discrete case, require a particular choice of $\omega_j$ or $r_k$ due to the
-constraints of interpolation or quadrature subroutines, or suffer from low
-accuracy as a result of intermediate approximations. Therefore, extending these
-schemes to compute the fully nonuniform DHT with controllable accuracy is not
-straightforward.
+approaches \cite{siegman1977quasi, johansen1979fast, mook1983algorithm}, and
+projection-slice or Abel transform-based methods \cite{oppenheim1980computation,
+hansen1985fast, kapur1995algorithm}. See~\cite{cree1993algorithms} for a review
+of many of these early computational approaches. Unfortunately, these existing
+methods are either not applicable to the discrete case, require a particular
+choice of $\omega_j$ or $r_k$ due to the constraints of interpolation or
+quadrature subroutines, or suffer from low accuracy as a result of intermediate
+approximations. Therefore, extending these schemes to compute the fully
+nonuniform DHT with controllable accuracy is not straightforward.
+
+A notable contribution is~\cite{liu1999nonuniform}, which describes a fully
+nonuniform fast Hankel transform, although it has accuracy and speed
+limitations. This work takes the popular convolutional approach, using a change
+of variables to reformulate the Hankel transform as a convolution with a known
+kernel. However, its accuracy is limited by the need for a quadrature on the
+nonuniform points $r_k$ in order to compute the continuous Fourier transform.
+The authors use an irregular trapezoidal rule for this purpose, which is not
+high-order accurate. This method also requires the computation of the inverse
+NUFFT using conjugate gradients. For even moderately clustered points or
+frequencies, this inverse problem is extremely ill-conditioned, and thus the
+number of required iterations can be prohibitive. This method is therefore
+suitable for ``quasi-equispaced'' points and frequencies, but is not tractable
+for all distributions.
 
 More recently, butterfly algorithms \cite{oneil2010algorithm, li2015butterfly,
 pang2020interpolative} were introduced as a broadly applicable methodology for
@@ -150,17 +162,17 @@ is the $k^{th}$ zero of $J_\nu$.
 \subsection*{Novelty of this work}
 \label{sec:novelty}
 
-At a high level, our algorithm can be viewed as a generalization of the one
-described in~\cite{townsend2015fast}. In~\cite{townsend2015fast}, asymptotic
-expansions were used to replace~$J_0$ for various arguments. These asymptotic
-expansions involved trigonometic functions, resulting in a fast algorithm for
-computing the DHT using fast cosine transforms (FCTs) and fast sine transforms
-(FSTs). In order to invoke these fast algorithms, various assumptions
-on~$\omega_j$ and~$r_k$ had to be made.
+% At a high level, our algorithm can be viewed as a generalization of the one
+% described in~\cite{townsend2015fast}. In~\cite{townsend2015fast}, asymptotic
+% expansions were used to replace~$J_0$ for various arguments. These asymptotic
+% expansions involved trigonometic functions, resulting in a fast algorithm for
+% computing the DHT using fast cosine transforms (FCTs) and fast sine transforms
+% (FSTs). In order to invoke these fast algorithms, various assumptions
+% on~$\omega_j$ and~$r_k$ had to be made.
 
 We describe here a precomputation-free nonuniform fast Hankel transform (NUFHT)
 which generalizes~\cite{townsend2015fast} to the fully nonuniform setting in a
-number of ways. First, we employ an adaptive parxtitioning scheme which, for any
+number of ways. First, we employ an adaptive partitioning scheme which, for any
 choice of $\omega_j$ and $r_k$, subdivides the matrix with
 entries~$J_\nu(\omega_j r_k)$ into blocks for which matrix-vector products can
 be evaluated efficiently. Second, we use the nonuniform fast Fourier transform
