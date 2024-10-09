@@ -194,10 +194,10 @@ bottleneck, and the necessary NUFFT becomes prohibitively large.
 
 \subsubsection{Higher dimensions}
 
-Using spherical Bessel function identities \cite[10.47.3,
-10.49.2]{olver2010nist}, one can see that for half-integer $\nu$, Hankel's
-expansion~\eqref{eq:asymptotic-expansion} is no longer just an asymptotic
-expansion, but an exact formula.
+Using spherical Bessel function identities, see equations~{10.47.3}
+and~{10.49.2} in~\cite{olver2010nist}, one can see that for half-integer $\nu$,
+Hankel's expansion~\eqref{eq:asymptotic-expansion} is no longer just an
+asymptotic expansion, but an exact formula.
 % \begin{align} J_{\frac{d}{2}-1}(z) &= \sqrt{\frac{2z}{\pi}}
 %   j_{\frac{d-3}{2}}(z) \\
 %   &= \sqrt{\frac{2}{\pi z}} \left( \cos\left(\mu\right) \sum_{\ell=0}^{M-1}
@@ -227,3 +227,8 @@ of $J_\nu(z)$~\cite{heitman2015asymptotics, olver2010nist}.
 However, the terms in these asymptotics are not sinusoids which can be
 efficiently evaluated with the NUFFT, and thus turning them into an
 analysis-based fast transform remains an open problem.
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "../main"
+%%% End:
