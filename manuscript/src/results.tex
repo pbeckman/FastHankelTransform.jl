@@ -36,15 +36,14 @@ calculation
 shows that if we subdivide a block with space frequency product $\Omega R$ at a
 point $(\omega, r)$ which lies on the curve $\omega r = z$, then the largest
 possible space-frequency product $p$ for the resulting lower right asymptotic
-block is achieved by taking $\omega$ to be the mid-point of $[\frac{z}{R},
-\Omega]$ on a log scale. In other words, points and frequencies which are
-exponentially distributed result in the highest possible space-frequency product
-$p$ for every asymptotic block at every level. From
-Theorem~\ref{thm:complexity}, maximizing $p$ drives the cost of the NUFHT. This
-distribution of points and frequencies is also challenging because it leads to
-equally-sized square blocks at every level, which guarantees that all blocks are
-subdivided the maximum number of times before yielding sufficiently small direct
-blocks.
+block is achieved by taking $\omega$ to be the mid-point of $[z/R, \Omega]$ on a
+log scale. In other words, points and frequencies which are exponentially
+distributed result in the highest possible space-frequency product $p$ for every
+asymptotic block at every level. From Theorem~\ref{thm:complexity}, maximizing
+$p$ drives the cost of the NUFHT. This distribution of points and frequencies is
+also challenging because it leads to equally-sized square blocks at every level,
+which guarantees that all blocks are subdivided the maximum number of times
+before yielding sufficiently small direct blocks.
 
 Figure~\ref{fig:both-scaling} shows the CPU time needed to evaluate the NUFHT in
 the Fourier-Bessel and exponentially-distributed cases with $\nu=0$ and
@@ -89,7 +88,7 @@ $n$ times machine precision \cite[Remark 9]{barnett2019parallel}.
   \begin{subfigure}[b]{0.32\textwidth}
     \begin{tikzpicture}
         \draw (0, 0) node[inner sep=0] {\includegraphics[height=0.92\textwidth,
-        trim={0.4cm 0 0.5cm 0}, clip]{./figures/n_scaling.pdf}}; \draw (1.5,
+        trim={0.4cm 0 0.4cm 0}, clip]{./figures/n_scaling.pdf}}; \draw (1.5,
         0.3) node {\small $\bO(n)$};
     \end{tikzpicture}
   \end{subfigure}
@@ -97,7 +96,7 @@ $n$ times machine precision \cite[Remark 9]{barnett2019parallel}.
   \begin{subfigure}[b]{0.32\textwidth}
     \begin{tikzpicture}
         \draw (0, 0) node[inner sep=0] {\includegraphics[height=0.92\textwidth,
-        trim={1.3cm 0 0.5cm 0}, clip]{./figures/m_scaling.pdf}}; \draw (1.3,
+        trim={1.3cm 0 0.4cm 0}, clip]{./figures/m_scaling.pdf}}; \draw (1.3,
         0.3) node {\small $\bO(m)$};
     \end{tikzpicture}
   \end{subfigure}
@@ -105,7 +104,7 @@ $n$ times machine precision \cite[Remark 9]{barnett2019parallel}.
   \begin{subfigure}[b]{0.32\textwidth}
     \begin{tikzpicture}
         \draw (0, 0) node[inner sep=0] {\includegraphics[height=0.92\textwidth,
-        trim={1.3cm 0 0.5cm 0}, clip]{./figures/p_scaling.pdf}}; \draw (1.45,
+        trim={1.3cm 0 0.4cm 0}, clip]{./figures/p_scaling.pdf}}; \draw (1.45,
         0.1) node {\small $\bO(p\log p)$};
     \end{tikzpicture}
   \end{subfigure}
@@ -118,18 +117,18 @@ $n$ times machine precision \cite[Remark 9]{barnett2019parallel}.
   \begin{subfigure}[b]{0.32\textwidth}
     \begin{tikzpicture} 
         \draw (0, 0) node[inner sep=0] {\includegraphics[height=0.92\textwidth,
-        trim={0.4cm 0 0.5cm 0}, clip]{./figures/both_scaling.pdf}}; \draw (1.25,
+        trim={0.4cm 0 0.4cm 0}, clip]{./figures/both_scaling.pdf}}; \draw (1.25,
         -0.5) node {\small $\bO(n\log n)$}; \draw (-0.7, 0.4) node {\small
         $\bO\big(n^2\big)$};
     \end{tikzpicture}
   \end{subfigure}
   \hfill
   \begin{subfigure}[b]{0.32\textwidth}
-    \includegraphics[height=0.92\textwidth, trim={1.3cm 0 0.5cm 0}, clip]{./figures/tol_scaling.pdf}
+    \includegraphics[height=0.92\textwidth, trim={1.3cm 0 0.4cm 0}, clip]{./figures/tol_scaling.pdf}
   \end{subfigure} 
   % \hfill 
   \begin{subfigure}[b]{0.32\textwidth}
-    \includegraphics[height=0.92\textwidth, trim={1.3cm 0 0.5cm 0}, clip]{./figures/nu_scaling.pdf}
+    \includegraphics[height=0.92\textwidth, trim={1.3cm 0 0.4cm 0}, clip]{./figures/nu_scaling.pdf}
   \end{subfigure}
   \caption{Scaling with $n$ for $p = \bO(n)$ test cases. In the first plot, we
   fix $\nu = 0, \epsilon = 10^{-8}$ and time the NUFHT for both the
@@ -141,7 +140,7 @@ $n$ times machine precision \cite[Remark 9]{barnett2019parallel}.
   \label{fig:both-scaling}
 \end{figure}
 
-\begin{figure}
+\begin{figure}[t]
   \centering
   \includegraphics[width=0.4\textwidth]{./figures/accuracy.pdf}
   \caption{Relative 2-norm error $\norm[2]{\vct{g} - \vct{\tilde{g}}} /
@@ -197,10 +196,10 @@ quadrature nodes, avoiding the curse of dimensionality.
 Figure~\ref{fig:fourier-test} shows an example quadrature and runtimes for both
 the NUFFT and NUFHT approaches. Note that for $\omega_{\text{max}} = 2^{15}$ the
 2D NUFFT is orders of magnitude slower than the NUFHT for most $n$, and for even
-larger $\omega_{\text{max}}$ the quadratic scaling of the 2D NUFFT with frequency
-makes the computation intractable on a laptop, while the NUFHT's linear scaling
-with frequency allows evaluation of the Fourier transform at much higher frequencies
-at an only moderately increasing cost.
+larger $\omega_{\text{max}}$ the quadratic scaling of the 2D NUFFT with
+frequency makes the computation intractable on a laptop, while the NUFHT's
+linear scaling with frequency allows evaluation of the Fourier transform at much
+higher frequencies at an only moderately increased cost.
 
 \begin{figure}
   \centering
@@ -211,7 +210,7 @@ at an only moderately increasing cost.
   \begin{subfigure}[b]{0.60\textwidth}
     \begin{tikzpicture} 
       \draw (0, 0) node[inner sep=0]
-      {\includegraphics[height=0.63\textwidth]{./figures/fourier_scaling.pdf}};
+      {\includegraphics[height=0.63\textwidth]{./figures/fourier_scaling_fewer.pdf}};
       \draw (-1.2, 1.92) node {\scriptsize $\log_2\omega_{\text{max}}$};
     \end{tikzpicture}
   \end{subfigure}

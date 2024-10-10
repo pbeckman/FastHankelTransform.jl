@@ -268,7 +268,7 @@ pl = plot(
         yticks=([1e-2, 1e0, 1e2], [L"10^{-2}", L"10^0", L"10^{2}"]),
         yformatter=:scientific
         )
-for j in eachindex(w_maxs)
+for j in eachindex(w_maxs[1:4])
     plot!(pl,
         ns, time_1Ds[j, :], 
         marker=(4, markers[j]), markerstrokewidth=0, 
