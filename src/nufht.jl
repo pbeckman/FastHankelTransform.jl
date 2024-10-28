@@ -55,7 +55,9 @@ function nufht!(gs, nu, rs, cs, ws;
         real_buffer_2 = zeros(Float64, n)
         cheb_buffer     = zeros(Float64, NUFHT_LOC_K[]+1)
         bessel_buffer_1 = zeros(Float64, NUFHT_LOC_K[]+1)
-        bessel_buffer_2 = zeros(Float64, NUFHT_LOC_K[]+1+div(nu,2)+isodd(nu))
+        bessel_buffer_2 = zeros(
+            Float64, NUFHT_LOC_K[]+1+div(abs(nu),2)+isodd(nu)
+            )
     end
 
     # add contributions of all boxes
@@ -77,10 +79,15 @@ function nufht!(gs, nu, rs, cs, ws;
         ))
         for (i0b, i1b, j0b, j1b) in box_set
             add_box!(
-                view(gs, i0b:i1b), nu,
+                view(gs, i0b:i1b), abs(nu),
                 view(rs, j0b:j1b), view(cs, j0b:j1b), view(ws, i0b:i1b)
                 )
         end
+    end
+
+    if nu < 0 && isodd(nu)
+        # use J_{-n} = (-1)^n J_n for negative orders
+        gs .*= -1
     end
 
     return gs
@@ -90,17 +97,17 @@ function setup_nufht!(nu, tol; z_split=nothing, K_asy=nothing, K_loc=nothing)
     if tol < 1e-15
         error("cannot set NUFHT tolerance below 1e-15")
     end
-    if nu < 0 || !isinteger(2nu) || (isinteger(nu) && nu > 100) || (!isinteger(nu) && isinteger(2nu) && nu > 19/2)
-        error("only NUFHT with integer orders ν = 0,1,...,100 and half-integer orders ν = 1/2,3/2,...,19/2 are implemented") 
+    if !isinteger(2nu) || (isinteger(nu) && nu > 200) || (!isinteger(nu) && isinteger(2nu) && nu > 19/2)
+        error("only NUFHT with integer orders ν = 0,±1,...,±200 and half-integer orders ν = 1/2,3/2,...,19/2 are implemented") 
     end
 
     # path to tables
     path = join(split(pathof(FastHankelTransform), '/')[1:end-2], '/') * "/tables/"
 
     # set order
-    i = nu + 1
+    i = abs(nu) + 1
     global NUFHT_NU[]       = nu
-    global NUFHT_ASY_COEF[] = load(path * "asy_a_table.jld")["as"][Int64(2nu + 1), :]
+    global NUFHT_ASY_COEF[] = load(path * "asy_a_table.jld")["as"][Int64(2abs(nu) + 1), :]
 
     # set tolerance
     j = max(1, ceil(Int64, -log10(tol) - 3))
@@ -109,14 +116,14 @@ function setup_nufht!(nu, tol; z_split=nothing, K_asy=nothing, K_loc=nothing)
     if isinteger(nu)
         # set number of terms in asymptotic expansion based on loose experiments
         # to balance effort of asymptotic and local expansions
-        k = isnothing(K_asy) ? min(10, floor(Int64, nu/5 + log10(1/tol)/4 + 1)) : K_asy
+        k = isnothing(K_asy) ? min(10, floor(Int64, abs(nu)/5 + log10(1/tol)/4 + 1)) : K_asy
         global NUFHT_ASY_K[] = k
 
         global NUFHT_Z_SPLIT[] = isnothing(z_split) ? load(path * "asy_z_table.jld")["zs"][i, j, k] : z_split
         global NUFHT_LOC_K[]   = isnothing(K_loc) ? load(path * "wimp_K_table.jld")["Ks"][i, j, k] : K_loc
     else
         # set number of Hankel expansion terms to give exact formula
-        global NUFHT_ASY_K[] = Int64(nu - 1/2)
+        global NUFHT_ASY_K[] = Int64(abs(nu) - 1/2)
 
         # set unused constants to defaults
         global NUFHT_Z_SPLIT[] = NaN

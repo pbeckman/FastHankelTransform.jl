@@ -1,7 +1,8 @@
 
 function generate_tables()
-    nus_all   = 0:0.5:100 
-    nus_int   = 0:100
+    nu_max    = 200
+    nus_all   = 0:0.5:nu_max 
+    nus_int   = 0:nu_max
     tols      = 10.0 .^ (-4:-1:-15)
     max_asy_K = 10
     asy_Ks    = 1:max_asy_K

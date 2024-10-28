@@ -307,24 +307,24 @@ explicitly
 \begin{align}
   u(r,\theta) = \sum_{\ell=-\infty}^\infty \sum_{j=1}^\infty \frac{\alpha_{j\ell}}{\lambda_{j\ell} + \kappa^2} J_\ell(\mathrm{j}_{\ell,j}r) e^{i\ell\theta}.
 \end{align}
-By diagonalizing the Laplacian, the Fourier-Bessel expansion thus provides a
+By diagonalizing the Laplacian, this Fourier-Bessel solver thus provides a
 direct analogue in the Dirichlet disk setting of spectral methods on a periodic
-rectangle using bivariate Fourier expansions. To compute the coefficients
-$\alpha_{j\ell}$ using~\eqref{FB-coef}, we use an $m$-point Gauss-Legendre rule
-in $r$ and a $t$-point trapezoidal rule in $\theta$. We iteratively double the
-number of nodes in each rule until the relative norm difference in computed
-coefficients between iterations is less than $\epsilon$ (controlling the
-discretization error) and the relative norm of the coefficients appended in the
-last iteration is less than $\epsilon$ (controlling the truncation error).
-Computing all $\alpha_{j\ell}$ at each iteration requires $t$ NUFHTs of size $m$
-and $m$ FFTs of size $t$. 
-
-By diagonalizing the Laplacian, this Fourier-Bessel solver inherits many of the
-merits of spectral methods. First, if $f$ and all its derivatives go to zero on
-$S^1$, and $f$ is smooth in $D$, then $\abs{\alpha_{j\ell}} \to 0$ exponentially
-fast in both $j$ and $\ell$ \cite{boyd2011comparing}. In addition, solutions for
+rectangle using bivariate Fourier expansions, and inherits many of the merits of
+spectral methods. First, if $f$ and all its derivatives go to zero on $S^1$, and
+$f$ is smooth in $D$, then $\abs{\alpha_{j\ell}} \to 0$ exponentially fast in
+both $j$ and $\ell$ \cite{boyd2011comparing}. In addition, solutions for
 arbitrary $\kappa$ can be evaluated without additional computations involving
-$f$.
+$f$. 
+
+To compute the Fourier-Bessel coefficients $\alpha_{j\ell}$ of $f$
+using~\eqref{eq:FB-coef}, we use an $m$-point Gauss-Legendre rule in $r$ and a
+$t$-point trapezoidal rule in $\theta$. We iteratively double the number of
+nodes in each rule until the relative norm difference in computed coefficients
+between iterations is less than $\epsilon$ (controlling the discretization
+error) and the relative norm of the coefficients appended in the last iteration
+is less than $\epsilon$ (controlling the truncation error). Computing all
+$\alpha_{j\ell}$ at each iteration requires $t$ NUFHTs of size $m$ and $m$ FFTs
+of size $t$, resulting in $\bO(tm\log m + mt\log t)$ total complexity.
 
 This approach does, however, have two main limitations. First is that the
 coefficients of $f$ decrease only algebraically in $j$ if $f$ has nonzero
@@ -347,8 +347,8 @@ described here.
     \begin{tikzpicture}
       \draw (0, 0) node[inner sep=0] {\includegraphics[width=\textwidth,
       trim={2cm 1cm 0.1cm 0.2cm}, clip]{./figures/helmholtz_f.pdf}};
-      \draw[fill=none, thick](-0.44, -0.1) circle (1.48) node {}; \draw[](-0.44, 1.8)
-      node {$f$};
+      \draw[fill=none, thick](-0.44, -0.1) circle (1.48) node {}; \draw[](-0.44,
+      1.8) node {\large $f$};
     \end{tikzpicture}
   \end{subfigure}
   \hfill
@@ -356,8 +356,8 @@ described here.
     \begin{tikzpicture}
       \draw (0, 0) node[inner sep=0] {\includegraphics[width=\textwidth,
       trim={2cm 1cm 0.1cm 0.2cm}, clip]{./figures/helmholtz_u_poisson.pdf}};
-      \draw[fill=none, thick](-0.44, -0.1) circle (1.48) node {}; \draw[](-0.44, 1.8)
-      node {$u$};
+      \draw[fill=none, thick](-0.44, -0.1) circle (1.48) node {}; \draw[](-0.44,
+      1.8) node {\large $u$};
     \end{tikzpicture}
   \end{subfigure} 
   \hfill 
