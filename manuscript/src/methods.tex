@@ -1,12 +1,16 @@
 
+We now describe our NUFHT algorithm in detail, emphasizing the process by which
+$\mtx{A}$ is adaptively subdivided into blocks using the results of the above
+error analysis.
+
 \subsection{Subdividing the matrix into blocks by expansion}
 
 Having established error bounds which allow us to automatically select the
 number of asymptotic terms $M$, local terms $L$, and crossover point $z$ given a
-tolerance $\epsilon$ and order $\nu$, we now discuss how to subdivide the matrix
-$\mtx{A}$ into three sets of blocks, each of which can be efficiently applied to
-a vector as described above:
-\begin{list}{$\circ$}{}
+tolerance $\epsilon$ and order $\nu$, we subdivide the matrix $\mtx{A}$ into
+three sets of blocks, each of which can be efficiently applied to a vector as
+described above:
+\begin{itemize}
     \item Local blocks $\mathscr{L} = \big\{ (j_0:j_1, k_0:k_1) \ | \ \omega_j
     r_k \leq z \ \forall \ j_0 \leq j \leq j_1, \ k_0 \leq k \leq k_1 \big\}$
     \item Asymptotic blocks $\mathscr{A} = \big\{ (j_0:j_1, k_0:k_1) \ | \
@@ -14,22 +18,22 @@ a vector as described above:
     \big\}$
     \item Direct blocks $\mathscr{D}$ which are small enough that no fast
     expansion is needed
-\end{list}
+\end{itemize}
 
 In order to determine a subdivision of $\mtx{A}$ into blocks of these three
 types, we initialize a set of \textit{mixed} blocks $\mathscr{M} = \{(1:m,
-1:n)\}$, which contains a mix of local and asymptotic entries. We then chose an
-index pair $(j,k)$ such that $\omega_j r_k \approx z$. This index subdivides the
-block into four new sub-blocks with $(j,k)$ at the center, so that the upper
-left block can be applied using the local expansion and is appended to
-$\mathscr{L}$, the lower right block using the asymptotic expansion and is
-appended to $\mathscr{A}$. 
+1:n)\}$, each of which contains a mix of local and asymptotic entries. We then
+chose an index pair $(j,k)$ such that $\omega_j r_k \approx z$. This index
+subdivides the block into four new sub-blocks with $(j,k)$ at the center, so
+that the upper left block can be applied using the local expansion and is
+appended to $\mathscr{L}$, the lower right block using the asymptotic expansion
+and is appended to $\mathscr{A}$. 
 
 The remaining lower left and upper right blocks each still contain a mix of
 local and asymptotic entries. If they are of sufficiently small size $m_b \times
-n_b$ with $m_b n_b < \texttt{min\_size} := 1024$, they can be evaluated directly
-and are appended to $\mathscr{D}$. Otherwise they are appended back to
-$\mathscr{M}$, and we continue the subdivision process recursively. 
+n_b$ with $m_b n_b < \texttt{min\_size}$, they can be evaluated directly and are
+appended to $\mathscr{D}$. Otherwise they are appended back to $\mathscr{M}$,
+and we continue the subdivision process recursively. 
 
 This method yields a valid partition for any choice of $(j,k)$, but for
 efficiency these indices are chosen to maximize the number of matrix entries
@@ -41,21 +45,21 @@ optimization problem
     &\ = \textsc{SplitIndices}(r_1,\dots,r_n, \omega_1,\dots,\omega_m, z) \\
     &:= \left\{
         \begin{array}{r@{\quad } l}
-        \text{argmax} & (j-j_0)(k_1-k) + (j_1-j)(k-k_0)   \\
+        \displaystyle\argmax_{j,k\in\Z} & (j-j_0)(k_1-k) + (j_1-j)(k-k_0)   \\
         \text{subject to} & j_0 \leq j \leq j_1 \\ 
         & k_0 \leq k \leq k_1 \\ 
         & \omega_j r_k \leq z
         \end{array}
     \right. \label{eq:subdiv-optim}
 \end{align}
-This problem can be solved exactly in \red{$\bO(j_1 - j_0 + k_1 - k_0)$?} time
-using \red{bisection?}. However, computing the exact optimal splitting indices
-for every box gives a negligible speedup overall compared to a simpler,
-quasi-optimal scheme. In practice it is sufficient to choose a small number of
-equispaced indices $j \in j_0:j_1$, compute the corresponding $k = \argmax \{k \
-| \ r_k \leq \frac{z}{\omega_j}\}$ for each $j$, and choose $(j,k)$ as the pair
-which minimizes the objective function of (\ref{eq:subdiv-optim}) among this
-small collection.
+This problem can be solved exactly in $\bO(j_1-j_0 + k_1-k_0)$ time. However,
+computing the exact optimal splitting indices for every box gives a negligible
+speedup to the overarching Hankel transform compared to a simpler, quasi-optimal
+scheme. In practice it is sufficient to choose a small number of equispaced
+indices $j \in j_0:j_1$, compute the corresponding $k = \argmax \{k \ | \ r_k
+\leq \frac{z}{\omega_j}\}$ for each $j$, and choose $(j,k)$ as the pair which
+minimizes the objective function of (\ref{eq:subdiv-optim}) among this small
+collection.
 
 \begin{algorithm2e}[t]
     \caption{Block subdivision of Hankel transform
@@ -73,19 +77,19 @@ small collection.
 We now analyze the computational complexity of the proposed approach. In order
 to do so, we must first comment on the complexity of the NUFFT, which is an
 important subroutine in our method. Most analysis-based NUFFT codes ---
-including the FINUFFT library \cite{barnett2019parallel} which we use in our
-NUFHT implementation --- consist of three steps. First, delta masses centered at
-each non-uniform point are convolved with a \textit{spreading function} which
-smears them onto a fine $N$-point uniform grid. Then, a standard equispaced FFT
-is computed on the fine grid. Finally, a diagonal de-convolution with the
-Fourier transform of the spreading function is applied to reverse the effect of
-the original smearing. For a more complete description of this NUFFT method, see
-\cite{dutt1993fast,greengard2004accelerating,barnett2019parallel}. For $n$
-points $r_k$ and $m$ frequencies $\omega_j$, spreading of each input point is
-$\bO(n)$, the FFT on the fine grid is $\bO(N\log N)$, and the deconvolution of
-each output frequency is $\bO(m)$. For the Type-III NUFFT, the size $N$ of the
-fine grid typically scales linearly with the space-frequency product $p :=
-(\omega_m - \omega_1)(r_n - r_1)$ \cite{barnett2019parallel,
+including the \texttt{FINUFFT} library \cite{barnett2019parallel} which we use
+in our NUFHT implementation --- consist of three steps. First, delta masses
+centered at each non-uniform point are convolved with a \textit{spreading
+function} which smears them onto a fine $N$-point uniform grid. Then, a standard
+equispaced FFT is computed on the fine grid. Finally, a diagonal de-convolution
+with the Fourier transform of the spreading function is applied to reverse the
+effect of the original smearing. For a more complete description of this NUFFT
+method, see \cite{dutt1993fast,greengard2004accelerating,barnett2019parallel}.
+For $n$ points $r_k$ and $m$ frequencies $\omega_j$, spreading of each input
+point is $\bO(n)$, the FFT on the fine grid is $\bO(N\log N)$, and the
+deconvolution of each output frequency is $\bO(m)$. For the Type-III NUFFT, the
+size $N$ of the fine grid typically scales linearly with the space-frequency
+product $p := (\omega_m - \omega_1)(r_n - r_1)$ \cite{barnett2019parallel,
 greengard2004accelerating}. Therefore the total cost of the NUFFT is $\bO(n + m
 + p\log p)$. Applying this fact in each asymptotic block in the Hankel transform
 matrix, and adding the cost of applying local and direct blocks, we can now
@@ -110,19 +114,19 @@ analyze the complexity of the entire NUFHT method.
     p\log p))$ complexity.
 
     Otherwise consider the case where $\mtx{A}$ contains both local and
-    asymptotic entries. Without loss of generality assume $\omega_1 \leq
+    asymptotic entries. First, note that the number of levels
+    $N_{\text{level}}$ scales like $\bO(\log\min(n,m))$. The cost of determining the splitting indices $(j,k)$ for each box $\mtx{A}(j_0:j_1,k_0:k_1)$ is $\bO(j_1-j_0+k_1-k_0)$, and thus the total cost of subdivision at each level is $\bO(m+n)$. Therefore the total cost of subdividing $\mtx{A}$ is $\bO((m+n)\log\min(n,m))$.
+    
+    Now without loss of generality assume $\omega_1 \leq
     \frac{z}{r_n} < \omega_2$ and $r_1 \leq \frac{z}{\omega_m} < r_2$, because
     otherwise we have blocks which can be evaluated using a single expansion as
-    just described without affecting the complexity.
-
-    After step $\ell$ of subdividing every mixed block, we obtain $2^{\ell}$ new
+    described above without affecting the complexity. After step $\ell$ of subdividing every mixed block, we obtain $2^{\ell}$ new
     mixed blocks, $2^{\ell-1}$ new local blocks, and $2^{\ell-1}$ new asymptotic
     blocks. Let the local blocks be of size $m_{\ell,b}^{(\text{loc})} \times
     n_{\ell,b}^{(\text{loc})}$ for $b = 1,\dots,2^{\ell-1}$. Then
     $\sum_{b=1}^{2^{\ell-1}} m_{\ell,b}^{(\text{loc})} \leq m$ and
     $\sum_{b=1}^{2^{\ell-1}} n_{\ell,b}^{(\text{loc})} \leq n$. An analogous
-    fact holds for the asymptotic blocks. The number of levels
-    $N_{\text{level}}$ scales like $\bO(\log\min(n,m))$. 
+    fact holds for the asymptotic blocks.
     
     Therefore, the total cost of local evaluation is 
     \begin{align}
@@ -152,7 +156,7 @@ analyze the complexity of the entire NUFHT method.
     $m_bn_b = \bO(1)$. Thus the cost of computing the dense matvec with each
     direct block is $\bO(1)$, and the number of direct blocks is $\bO(m + n)$.
     Therefore the total direct evaluation cost is $\bO(m + n)$. Summing the cost
-    of local, asymptotic, and direct evaluation gives the result.
+    of matrix subdivision, as well as local, asymptotic, and direct evaluation gives the result.
 \end{proof}
 
 In typical applications the domain of integration $[0,R]$ is fixed by e.g. the

@@ -1,24 +1,37 @@
+We now describe local and asymptotic expansions of the Bessel function
+$J_\nu(\omega r)$, and provide error analysis by which one can select the number
+of terms needed in each expansion to assure $\epsilon$ accuracy in both regimes.
+
 \subsection{The Wimp expansion}\label{sec:local}
 
-If one looks at a rectangle $[0, \Omega] \times [0, R]$ where $\Omega R$ is
-sufficiently small, $J_\nu(\omega r)$ is approximately low-rank for all $\omega
-\in [0, \Omega], r \in [0, R]$. Fortuitously, one such low-rank approximation is
-available in closed form \cite{wimp1962polynomial}. In the case that $\nu$ is
+Near the origin, $J_\nu(z)$ is a smooth and essentially non-oscillatory function
+of $z$. As a result, $J_\nu(xy)$ is a numerically low-rank function of all
+sufficiently small inputs $x$ and $y$. Fortuitously, one such low-rank expansion
+--- which we refer to as the \textit{Wimp expansion} --- is available in closed
+form for integer $\nu$~\cite{wimp1962polynomial}. In the case that $\nu$ is
 even, we have
-\begin{align}
-    J_\nu(xy) 
-    &= \sum_{\ell=0}^\infty C_\ell(x) T_{2\ell}(y) \\
-    C_\ell(x) 
-    &= \delta_\ell J_{\frac{\nu}{2} + \ell}(x) \, J_{\frac{\nu}{2} - \ell}(x) \\
-    \delta_\ell 
-    &= \begin{cases}
-        1 & \ell=0 \\
-        2 & \text{otherwise}
-    \end{cases}
-    % J_{2\eta + 1}(\omega r) 
-    % &= \sum_{\ell=0}^\infty 2J_{\eta + \ell + 1}(\omega R) \, J_{\eta - \ell}(\omega R) \, T_{2\ell+1}\left( \frac{r}{R} \right)
-\end{align}
-for $\abs{y} \leq 1$. An analogous expansion exists for $\nu$ odd.
+\begin{equation}
+    \begin{aligned}
+        J_\nu(xy) 
+        &= \sum_{\ell=0}^\infty C_\ell(x) T_{2\ell}(y) \\
+        C_\ell(x) 
+        &= \delta_\ell J_{\frac{\nu}{2} + \ell}(x) \, J_{\frac{\nu}{2} - \ell}(x) \\
+        \delta_\ell 
+        &= \begin{cases}
+            1 & \ell=0 \\
+            2 & \text{otherwise}
+        \end{cases}
+    \end{aligned}
+\end{equation}
+for all $\abs{y} \leq 1$. A similar expansion exists for $\nu$ odd.
+
+In order to employ the Wimp expansion to compute local terms within the Hankel
+transform, we must determine the number of terms $L$ needed to construct an
+$\epsilon$-accurate approximation to $J_\nu(\omega r)$ on a given rectangle
+$(\omega, r) \in [0, \Omega] \times [0, R]$. The following lemma provides a
+bound on the induced truncation error in the Wimp expansion as a function of the
+order $\nu$, the space-frequency product $\Omega R$, and the number of retained
+terms $L$.
 
 \begin{lemma} \label{lem:wimp} Truncating the Wimp expansion after $L$ terms
     gives
@@ -85,7 +98,8 @@ approximating any block of the matrix $J_\nu(\omega_j r_k)$ for which $\omega r
 \leq z$ using the $L$-term Wimp expansion. 
 
 This expansion is highly beneficial from a computational perspective, as it
-yields an analytical rank-$L$ approximation to any block of $\bm{A}$
+yields an analytical rank-$L$ approximation to any block of $\bm{A}$ for which
+$\omega_j r_k$ is sufficiently small
 \begin{equation}
     \mtx{A}(j_0:j_1, k_0:k_1) \vct{f}(k_0:k_1)
     \approx \mtx{C}\mtx{T}^\top \vct{f}(k_0:k_1)
@@ -100,7 +114,9 @@ first applying $\bm{T}^\top$ then applying $\bm{C}$.
 \subsection{Hankel's expansion}
 \label{sec:asymptotic}
 
-Hankel's asymptotic expansion for $z \to \infty$ is given by
+Away from the origin, $J_\nu(z)$ exhibits essentially sinusoidal oscillation
+with period $2\pi$. This statement is made precise by Hankel's asymptotic
+expansion, which states that for $z \to \infty$
 \begin{align} \label{eq:asymptotic-expansion}
     J_\nu(x)
     \sim \sqrt{\frac{2}{\pi x}} \left( 
@@ -114,7 +130,7 @@ where $\phi := - \frac{(2\nu+1)\pi}{4}$ and
 \end{align}
 Rearranging this expansion, we obtain an expansion which can be evaluated using
 two NUFFTs and diagonal scalings, and whose error is bounded by the size of the
-first neglected terms
+first neglected terms \todocite
 \begin{align}
     & \Bigg| J_\nu(\omega r)
     - \sqrt{\frac{2}{\pi}} \sum_{\ell=0}^{M-1} 
@@ -144,19 +160,17 @@ matrices are given by $\mtx{D}_\omega :=
 \subsection{Determining order of expansions and crossover point}
 \label{sec:cutoff}
 
-With these error bounds in hand, 
-
-We precompute the following tables for tolerances $\epsilon = 10^{-4}, \dots,
-10^{-15}$, orders $\nu = 1, \dots, 100$, and number of asymptotic expansion
-terms $M = 1, \dots, 20$
-\begin{list}{$\circ$}{}
-    \item $z_{\nu, \epsilon}^M$ such that the $M$-term asymptotic expansion of
-    $J_\nu(\omega r)$ is $\epsilon$-accurate for all $\omega r > z_{\nu,
+With these error bounds in hand, we precompute the following tables for
+tolerances $\epsilon = 10^{-4}, \dots, \allowbreak 10^{-15}$, orders $\nu = 1,
+\dots, 100$, and number of asymptotic expansion terms $M = 1, \dots, 20$:
+\begin{itemize}
+    \item $z_{\nu, \epsilon}^M$ such that $M$-term Hankel expansion of
+    $J_\nu(\omega r)$ is $\epsilon$-accurate $\forall \ \omega r > z_{\nu,
     \epsilon}^M$
-    \item $L_{\nu, \epsilon}^M$ such that the $L_{\nu, \epsilon}^M$-term Wimp
-    expansion of $J_\nu(\omega r)$ is $\epsilon$-accurate for all $\omega r \leq
-    z_{\nu, \epsilon}^M$
-\end{list}
+    \item $L_{\nu, \epsilon}^M$ such that $L_{\nu, \epsilon}^M$-term Wimp
+    expansion of $J_\nu(\omega r)$ is $\epsilon$-accurate $\forall \ \omega r
+    \leq z_{\nu, \epsilon}^M$
+\end{itemize}
 Therefore, for any order $\nu$ we can look up a pair of complementary local and
 asymptotic expansions with error everywhere bounded by the requested tolerance
 $\epsilon$. The only remaining free parameter is the number of asymptotic terms
