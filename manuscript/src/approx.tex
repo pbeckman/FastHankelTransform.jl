@@ -8,14 +8,14 @@ Near the origin, $J_\nu(z)$ is a smooth and essentially non-oscillatory function
 of $z$. As a result, $J_\nu(xy)$ is a numerically low-rank function of all
 sufficiently small inputs $x$ and $y$. Fortuitously, one such low-rank expansion
 --- which we refer to as the \textit{Wimp expansion} --- is available in closed
-form for integer $\nu$~\cite{wimp1962polynomial}. In the case that $\nu$ is
+form for integer~$\nu$~\cite{wimp1962polynomial}. In the case that $\nu$ is
 even, we have
 \begin{equation}
     \begin{aligned}
         J_\nu(xy) 
-        &= \sum_{\ell=0}^\infty C_\ell(x) T_{2\ell}(y) \\
+        &= \sum_{\ell=0}^\infty C_\ell(x) \, T_{2\ell}(y) \\
         C_\ell(x) 
-        &= \delta_\ell J_{\frac{\nu}{2} + \ell}(x) \, J_{\frac{\nu}{2} - \ell}(x) \\
+        &= \delta_\ell \, J_{\frac{\nu}{2} + \ell}(x) \, J_{\frac{\nu}{2} - \ell}(x) \\
         \delta_\ell 
         &= \begin{cases}
             1 & \ell=0 \\
@@ -92,7 +92,7 @@ Lemma \ref{lem:wimp} is rather opaque regarding the impact of the various
 parameters on the error because we have not utilized any simplifying bounds on
 the function $\psi$. However, it takes into account the decay in both
 $J_{\frac{\nu}{2}+\ell}$ \textit{and} $J_{\frac{\nu}{2}-\ell}$, thus remaining
-relatively tight for small $\nu$. It is therefore well-suited to our purposes,
+relatively tight for small $\nu$. It is therefore well-suited to our purposes
 because given $z, L > 0$, it gives a bound on the pointwise error in
 approximating any block of the matrix $J_\nu(\omega_j r_k)$ for which $\omega r
 \leq z$ using the $L$-term Wimp expansion. 
@@ -101,12 +101,18 @@ This expansion is highly beneficial from a computational perspective, as it
 yields an analytical rank-$L$ approximation to any block of $\bm{A}$ for which
 $\omega_j r_k$ is sufficiently small
 \begin{equation}
-    \mtx{A}(j_0:j_1, k_0:k_1) \vct{f}(k_0:k_1)
-    \approx \mtx{C}\mtx{T}^\top \vct{f}(k_0:k_1)
+  \mtx{A}(j_0:j_1, k_0:k_1)
+  %\vct{f}(k_0:k_1)
+  \approx \mtx{C}\mtx{T}^\top
+  %\vct{f}(k_0:k_1)
 \end{equation}
 where $\mtx{C} \in \R^{(j_1-j_0+1) \times L}$ and $\mtx{T} \in \R^{(k_1-k_0+1)
-\times L}$ with entries $\mtx{C}(j,\ell) = C_{\ell-1}(\omega_j r_{k_1})$ and
-$\mtx{T}(k,\ell) = T_{2\ell-2}\big(\frac{r_k}{r_{k_1}}\big)$. For a block of
+  \times L}$ with entries
+\begin{equation}
+  \mtx{C}(j,\ell) = C_{\ell-1}(\omega_j r_{k_1}) \qquad  \text{and} \qquad 
+  \mtx{T}(k,\ell) = T_{2\ell-2}\left(\frac{r_k}{r_{k_1}}\right).
+\end{equation}
+For a block of
 $\mtx{A}$ of size $m_b \times n_b$, the low-rank approximation given by the Wimp
 expansion can be applied to a vector in $\bO\big(L(m_b + n_b)\big)$ time by
 first applying $\bm{T}^\top$ then applying $\bm{C}$.
@@ -126,30 +132,41 @@ expansion, which states that for $z \to \infty$
 \end{align}
 where $\phi := - \frac{(2\nu+1)\pi}{4}$ and 
 \begin{align}
-    a_\ell(\nu) := \frac{(4\nu^2 - 1)(4\nu^2 - 3)\dots(4\nu^2 - (2\ell-1)^2)}{\ell! 8^\ell}.
+    a_\ell(\nu) := \frac{(4\nu^2 - 1)(4\nu^2 - 3)\dots(4\nu^2 -
+  (2\ell-1)^2)}{\ell! \, 8^\ell}.
 \end{align}
 Rearranging this expansion, we obtain an expansion which can be evaluated using
 two NUFFTs and diagonal scalings, and whose error is bounded by the size of the
 first neglected terms \todocite
-\begin{align}
-    & \Bigg| J_\nu(\omega r)
-    - \sqrt{\frac{2}{\pi}} \sum_{\ell=0}^{M-1} 
-        \frac{(-1)^\ell a_{2\ell}(\nu)}{\omega^{2\ell + \frac{1}{2}}} \Re\left( \frac{e^{i\phi}}{r^{2\ell+\frac{1}{2}}} e^{i\omega r}\right)
-        - \frac{(-1)^\ell a_{2\ell+1}(\nu)}{\omega^{2\ell+\frac{3}{2}}} \Im\left(\frac{e^{i\phi}}{r^{2\ell+\frac{3}{2}}} e^{i\omega r} \right)
-        \Bigg| \\
-        &\hspace*{0.1\textwidth} \leq \sqrt{\frac{2}{\pi}} \left( \frac{\abs{a_{2M}(\nu)}}{(\omega r)^{2M+\frac{1}{2}}} + \frac{\abs{a_{2M+1}(\nu)}}{(\omega r)^{2M+\frac{3}{2}}} \right)
-\end{align}
+\begin{multline}
+     \Bigg| J_\nu(\omega r)
+    - \sqrt{\frac{2}{\pi}} \sum_{\ell=0}^{M-1} \left[  
+        \frac{(-1)^\ell a_{2\ell}(\nu)}{\omega^{2\ell + \frac{1}{2}}} \Re\left(
+          \frac{e^{i\phi}}{r^{2\ell+\frac{1}{2}}} e^{i\omega r}\right) \right.
+        \\ \left. - \frac{(-1)^\ell
+            a_{2\ell+1}(\nu)}{\omega^{2\ell+\frac{3}{2}}}
+          \Im\left(\frac{e^{i\phi}}{r^{2\ell+\frac{3}{2}}} e^{i\omega r} \right) \right]
+        \Bigg| 
+         \leq \sqrt{\frac{2}{\pi}} \left( \frac{\abs{a_{2M}(\nu)}}{(\omega r)^{2M+\frac{1}{2}}} + \frac{\abs{a_{2M+1}(\nu)}}{(\omega r)^{2M+\frac{3}{2}}} \right)
+\end{multline}
 
 The computational advantage of this expansion is that the $2M$-term asymptotic
-expansion of any block of $\bm{A}$ can be rapidly applied to a vector using $2M$
+expansion of any block of $\bm{A}$ can be rapidly applied to a vector~$\vct{x}$ using $2M$
 Type-III NUFFTs
-\begin{align}
-    \mtx{A}(j_0:j_1, k_0:k_1) \vct{f}(k_0:k_1) \hspace*{0.2\textwidth}& \\
+\begin{multline}
+    \mtx{A}(j_0:j_1, k_0:k_1) \vct{x} 
     \approx \sqrt{\frac{2}{\pi}} \sum_{\ell=0}^{M-1} (-1)^\ell \Bigg[ 
-        a_{2\ell}(\nu) \mtx{D}_\omega^{-2\ell-\frac{1}{2}} &\Re\Big(e^{i\phi} \mtx{F} \mtx{D}_r^{-2\ell-\frac{1}{2}} \vct{f}(k_0:k_1)\Big) \\
-        - a_{2\ell+1}(\nu) \mtx{D}_\omega^{-2\ell-\frac{3}{2}} &\Im\Big(e^{i\phi} \mtx{F} \mtx{D}_r^{-2\ell-\frac{3}{2}} \vct{f}(k_0:k_1)\Big) 
+        a_{2\ell}(\nu) \mtx{D}_\omega^{-2\ell-\frac{1}{2}} \Re\Big(e^{i\phi}
+                                                             \mtx{F}
+                                                             \mtx{D}_r^{-2\ell-\frac{1}{2}}
+                                                             \vct{x} \Big) \\
+        - a_{2\ell+1}(\nu) \mtx{D}_\omega^{-2\ell-\frac{3}{2}}
+                                                             \Im\Big(e^{i\phi}
+                                                               \mtx{F}
+                                                               \mtx{D}_r^{-2\ell-\frac{3}{2}}
+                                                               \vct{x} \Big) 
     \Bigg]
-\end{align}
+\end{multline}
 where $\mtx{F} \in \C^{(j_1 - j_0 + 1) \times (k_1 - k_0 + 1)}$ is the Type-III
 nonuniform DFT matrix corresponding to frequencies $\omega_{j_0}, \dots,
 \omega_{j_1}$ and points $r_{k_0}, \dots, r_{k_1}$, and the diagonal scaling
@@ -157,30 +174,40 @@ matrices are given by $\mtx{D}_\omega :=
 \diag(\omega_{j_0},\dots,\omega_{j_1})$, and $\mtx{D}_r :=
 \diag(r_{k_0},\dots,r_{k_1})$.
 
+
+
+
+
 \subsection{Determining order of expansions and crossover point}
 \label{sec:cutoff}
 
-With these error bounds in hand, we precompute the following tables for
-tolerances $\epsilon = 10^{-4}, \dots, \allowbreak 10^{-15}$, orders $\nu = 1,
-\dots, 100$, and number of asymptotic expansion terms $M = 1, \dots, 20$:
+With these error bounds in hand, we can precompute the
+parameters~$z_{\nu, \epsilon}^M$ and~$L_{\nu, \epsilon}^M$ for tolerances
+$\epsilon = 10^{-4}, \dots, \allowbreak 10^{-15}$, orders $\nu = 1, \dots, 100$,
+and number of asymptotic expansion terms $M = 1, \dots, 20$:
 \begin{itemize}
     \item $z_{\nu, \epsilon}^M$ such that $M$-term Hankel expansion of
     $J_\nu(\omega r)$ is $\epsilon$-accurate $\forall \ \omega r > z_{\nu,
-    \epsilon}^M$
+    \epsilon}^M$,
     \item $L_{\nu, \epsilon}^M$ such that $L_{\nu, \epsilon}^M$-term Wimp
     expansion of $J_\nu(\omega r)$ is $\epsilon$-accurate $\forall \ \omega r
-    \leq z_{\nu, \epsilon}^M$
+    \leq z_{\nu, \epsilon}^M$.
 \end{itemize}
 Therefore, for any order $\nu$ we can look up a pair of complementary local and
 asymptotic expansions with error everywhere bounded by the requested tolerance
 $\epsilon$. The only remaining free parameter is the number of asymptotic terms
-$M$. This parameter is selected heuristically in our implementation as 
-\begin{align} \label{eq:num-asy-terms}
-    M = \min\left(\flr{1 + \frac{\nu}{5} - \frac{\log_{10}(\epsilon)}{4}}, 20\right)
-\end{align}
-according to numerical experiments which maximize speed by balancing the cost of
-the local, asymptotic, and direct evaluations.
+$M$. This parameter is selected based on various numerical experiments which
+maximize speed by balancing the cost of the local, asymptotic, and direct
+evaluations. In our implementation, we use the heuristic
+\begin{equation}
+  \label{eq:num-asy-terms}
+    M = \min\left(\flr{1 + \frac{\nu}{5} - \frac{\log_{10}(\epsilon)}{4}}, 20\right).
+\end{equation}
 
 
 
-%%% Local Variables: %% mode: latex %% TeX-master: "../main" %% End:
+
+%%% Local Variables:
+%% mode: latex
+%% TeX-master: "../main"
+%% End:
