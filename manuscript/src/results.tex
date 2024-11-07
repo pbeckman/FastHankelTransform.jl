@@ -4,86 +4,7 @@ to computing Fourier transforms of radial kernel functions from statistics.
 
 \subsection{Comparison to direct evaluation}
 
-We start by empirically verifying the analysis in Theorem~\ref{thm:complexity}.
-In order to study the impact of each of the relevant parameters independently,
-we take $n$ equispaced points $r_k$ in the interval $[0,\sqrt{10^5}]$ and $m$
-equispaced frequencies $\omega_j$ in the interval $[0,p/\sqrt{10^5}]$. First, we
-fix $m=10^3$ and $p=10^5$ while increasing $n$. Next, we fix $n=10^3$ and
-$p=10^5$, this time increasing $m$. Finally, we fix both $n = m = 10^3$ while
-increasing $p$. Figure~\ref{fig:nmp-scaling} shows the CPU time for the NUFHT as
-well as for direct summation in each of these scenarios. We observe the linear
-or quasilinear scaling expected from Theorem~\ref{thm:complexity} with each of
-$n, m,$ and $p$. Note in particular that the NUFHT scales with $p$ while direct
-summation does not. Therefore, if a DHT is desired with relatively few points
-with a very large space-frequency product, direct summation may give superior
-performance, although such circumstances are rare in practice.
-
-Next, we study the more typical scenario where the space-frequency product $p$
-grows linearly with $n$, as discussed in Corollary~\ref{cor:complexity}. Here we
-study two cases. First, we consider the Fourier-Bessel expansion where $\omega_j
-= \mathrm{j}_{\nu, j}$ and $r_k = \mathrm{j}_{\nu, k}/\mathrm{j}_{\nu, n+1}$
-with $n = m$. This is the direct analogue of the discrete Fourier transform as
-the points and frequencies are the scaled roots of the basis, and the resulting
-points and frequencies are quasi-equispaced for small to moderate $\nu$. 
-
-We also consider the case of exponentially distributed points and frequencies
-$\omega_j = r_j = 10^{\log_{10}(j) - \log_{10}(n)/2}$ with $n = m$. This is a
-somewhat pathological worst case scenario for our algorithm, as the simple
-calculation
-\begin{equation}
-  \sqrt{\frac{\Omega z}{R}} = \argmax_{\frac{z}{R} \leq \omega \leq \Omega} \ (\Omega - \omega)\left(R - \frac{z}{\omega}\right)
-\end{equation}
-shows that if we subdivide a block with space frequency product $\Omega R$ at a
-point $(\omega, r)$ which lies on the curve $\omega r = z$, then the largest
-possible space-frequency product $p$ for the resulting lower right asymptotic
-block is achieved by taking $\omega$ to be the mid-point of $[z/R, \Omega]$ on a
-log scale. In other words, points and frequencies which are exponentially
-distributed result in the highest possible space-frequency product $p$ for every
-asymptotic block at every level. From Theorem~\ref{thm:complexity}, maximizing
-$p$ drives the cost of the NUFHT. This distribution of points and frequencies is
-also challenging because it leads to equally-sized square blocks at every level,
-which guarantees that all blocks are subdivided the maximum number of times
-before yielding sufficiently small direct blocks.
-
-Figure~\ref{fig:both-scaling} shows the CPU time needed to evaluate the NUFHT in
-the Fourier-Bessel and exponentially-distributed cases with $\nu=0$ and
-$\epsilon=10^{-8}$. Both cases eventually demonstrate the expected $\bO(n\log
-n)$ scaling. As a result of to the challenges just discussed for the
-exponentially-distributed case, its runtime is up to an order of magnitude
-slower than the Fourier-Bessel series.
-
-Next, we study the impact of the order $\nu$ and tolerance $\epsilon$ on the
-runtime. As $\nu$ increases or $\epsilon$ decreases, the number of necessary
-terms $L$ and $M$ in the local and asymptotic expansions respectively both grow.
-From Theorem~\ref{thm:complexity}, we expect the runtime to grow linearly with
-$L + M$. Figure~\ref{fig:both-scaling} shows the runtime of our method for
-various $\epsilon$ with $\nu=0$ held constant, as well as for multiple $\nu$
-with $\epsilon=10^{-8}$ fixed. The scaling of the algorithm is similar in all
-cases, while the prefactors vary --- a transform with $\epsilon = 10^{-15}$ is
-about an order of magnitude slower than using $\epsilon = 10^{-4}$, and an order
-$\nu=100$ transform is almost two orders of magnitude slower the order $\nu=0$
-equivalent.
-
-Finally, we study the relative error in the output $\vct{g}$ as a function of
-the desired tolerance $\epsilon$. To do this, we fix $n$ and form a sparse
-vector $\vct{f} \in \R^n$ with 1000 nonzero entries whose indices are selected
-at random and whose values are independent standard Gaussian. We evaluate the
-Fourier-Bessel series using the NUFHT with the full vector $\vct{f}$ as input,
-and denote the output as $\vct{\tilde{g}}$. We then use direct summation on only
-the nonzero entries to generate a reference result $\vct{g}$.
-Figure~\ref{fig:accuracy} shows the 2-norm relative error $\norm[2]{\vct{g} -
-\vct{\tilde{g}}} / \norm[2]{\vct{g}}$ between the NUFHT and the reference. For
-small transforms with $n=10^3$, the relative error demonstrates excellent
-agreement with the tolerance $\epsilon$ down to $\epsilon = 10^{-13}$ or so.
-This suggests that the analysis used in Section~\ref{sec:approx} to determine
-the necessary number of local and asymptotic terms is fairly tight. For larger
-transforms, however, the error saturates, and regardless of the tolerance
-$\epsilon$ our method gives at most 9 digits of accuracy for transforms of size
-$n=10^7$. This is a well-known limitation of existing NUFFT methods, for which
-the error generally scales like $n$ times machine precision \cite[Remark
-9]{barnett2019parallel}.
-
-\begin{figure}
+\begin{figure}[t]
   \centering
   \newcommand\twa{0.29cm} \newcommand\tw{0.43cm}
   \begin{subfigure}[b]{0.32\textwidth}
@@ -112,6 +33,88 @@ the error generally scales like $n$ times machine precision \cite[Remark
   \caption{Scaling with $n$, $m$, and $p$ respectively, with the other variables held constant. In the first two plots, $p=10^5$ and $m$}
   \label{fig:nmp-scaling}
 \end{figure}
+
+We start by empirically verifying the analysis in Theorem~\ref{thm:complexity}.
+In order to study the impact of each of the relevant parameters independently,
+we take $n$ equispaced points $r_k$ in the interval $[0,\sqrt{10^5}]$ and $m$
+equispaced frequencies $\omega_j$ in the interval $[0,p/\sqrt{10^5}]$. First, we
+fix $m=10^3$ and $p=10^5$ while increasing $n$. Then, we fix~$n=10^3$ and
+$p=10^5$, this time increasing $m$. Finally, we fix both $n = m = 10^3$ while
+increasing $p$. Figure~\ref{fig:nmp-scaling} shows the CPU time for the NUFHT as
+well as for direct summation in each of these scenarios. We observe the linear
+or quasilinear scaling expected from Theorem~\ref{thm:complexity} with each of
+$n, m,$ and $p$. Note in particular that the NUFHT scales with $p$ while direct
+summation does not. Therefore, if a DHT is desired with relatively few points
+with a very large space-frequency product, direct summation may give superior
+performance, although such circumstances are rare in practice.
+
+Next, we study the more typical scenario where the space-frequency product $p$
+grows linearly with $n$, as discussed in Corollary~\ref{cor:complexity}. Here we
+study two cases. First, we consider the Fourier-Bessel expansion where $\omega_j
+= \mathrm{j}_{\nu, j}$ and $r_k = \mathrm{j}_{\nu, k}/\mathrm{j}_{\nu, n+1}$
+with $n = m$. This is the direct analogue of the discrete Fourier transform as
+the points and frequencies are the scaled roots of the basis, and the resulting
+points and frequencies are quasi-equispaced for small to moderate $\nu$. 
+
+We also consider the case of exponentially distributed points and frequencies
+$\omega_j = r_j = 10^{\log_{10}(j) - \log_{10}(n)/2}$ with $n = m$. This is a
+somewhat pathological worst case scenario for our algorithm, as the simple
+calculation
+\begin{equation}
+  \sqrt{\frac{\Omega z}{R}} = \argmax_{\frac{z}{R} \leq \omega \leq \Omega} \ (\Omega - \omega)\left(R - \frac{z}{\omega}\right)
+\end{equation}
+shows that if we subdivide a block with space frequency product $\Omega R$ at a
+point $(\omega, r)$ which lies on the curve $\omega r = z$, then the largest
+possible space-frequency product~$p$ for the resulting lower right asymptotic
+block is achieved by taking $\omega$ to be the mid-point of $[z/R, \Omega]$ on a
+log scale. In other words, points and frequencies which are exponentially
+distributed result in the highest possible space-frequency product $p$ for every
+asymptotic block at every level. From Theorem~\ref{thm:complexity}, maximizing
+$p$ drives the cost of the NUFHT. This distribution of points and frequencies is
+also challenging because it leads to equally-sized square blocks at every level,
+which guarantees that all blocks are subdivided the maximum number of times
+before yielding sufficiently small direct blocks.
+
+
+
+Figure~\ref{fig:both-scaling} shows the CPU time needed to evaluate the NUFHT in
+the Fourier-Bessel and exponentially-distributed cases with $\nu=0$ and
+$\epsilon=10^{-8}$. Both cases eventually demonstrate the expected $\bO(n\log
+n)$ scaling. As a result of the challenges just discussed for the
+exponentially-distributed case, its runtime is up to an order of magnitude
+slower than the Fourier-Bessel series.
+
+Next, we study the impact of the order $\nu$ and tolerance $\epsilon$ on the
+runtime. As $\nu$ increases or $\epsilon$ decreases, the number of necessary
+terms $L$ and $M$ in the local and asymptotic expansions, respectively, both grow.
+From Theorem~\ref{thm:complexity}, we expect the runtime to grow linearly with
+$L + M$. Figure~\ref{fig:both-scaling} shows the runtime of our method for
+various $\epsilon$ with $\nu=0$ held constant, as well as for multiple $\nu$
+with $\epsilon=10^{-8}$ fixed. The scaling of the algorithm is similar in all
+cases, while the prefactors vary: A transform with $\epsilon = 10^{-15}$ is
+about an order of magnitude slower than using $\epsilon = 10^{-4}$, and an order
+$\nu=100$ transform is almost two orders of magnitude slower the order $\nu=0$
+equivalent.
+
+Finally, we study the relative error in the output $\vct{g}$ as a function of
+the desired tolerance $\epsilon$. To do this, we fix $n$ and form a sparse
+vector $\vct{f} \in \R^n$ with 1000 nonzero entries whose indices are selected
+at random and whose values are independent standard Gaussian. We evaluate the
+Fourier-Bessel series using the NUFHT with the full vector~$\vct{f}$ as input,
+and denote the output as $\vct{\tilde{g}}$. We then use direct summation on only
+the nonzero entries to generate a reference result $\vct{g}$.
+Figure~\ref{fig:accuracy} shows the 2-norm relative error $\norm[2]{\vct{g} -
+\vct{\tilde{g}}} / \norm[2]{\vct{g}}$ between the NUFHT and the reference. For
+small transforms with $n=10^3$, the relative error demonstrates excellent
+agreement with the tolerance $\epsilon$ down to $\epsilon = 10^{-13}$ or so.
+This suggests that the analysis used in Section~\ref{sec:approx} to determine
+the necessary number of local and asymptotic terms is fairly tight. For larger
+transforms, however, the error saturates, and regardless of the tolerance
+$\epsilon$ our method gives at most 9 digits of accuracy for transforms of size
+$n=10^7$. This is a well-known limitation of existing NUFFT methods, for which
+the error generally scales like $n$ times machine precision \cite[Remark
+9]{barnett2019parallel}.
+
 
 \begin{figure}
   \centering
@@ -143,7 +146,7 @@ the error generally scales like $n$ times machine precision \cite[Remark
 
 \begin{figure}[t]
   \centering
-  \includegraphics[width=0.4\textwidth]{./figures/accuracy.pdf}
+  \includegraphics[width=0.7\textwidth]{./figures/accuracy.pdf}
   \caption{Relative 2-norm error $\norm[2]{\vct{g} - \vct{\tilde{g}}} /
   \norm[2]{\vct{g}}$ as a function of tolerance $\epsilon$ for a DHT of order
   $0$ for various $n$.}
@@ -157,22 +160,25 @@ out the radial variables analytically, reducing the $d$-dimensional Fourier
 integral to a single Hankel transform
 \begin{align} \label{eq:radial-fourier}
     \hat{f}(\bm{\omega}) 
-    = \int_{\R^d} f(\norm{\bm{r}}) e^{i\bm{\omega}^\top \bm{r}} \dif{\bm{r}}
-    = \frac{(2\pi)^{\frac{d}{2}}}{\omega^{\frac{d}{2} - 1}} \int_0^\infty f(r) J_{\frac{d}{2} - 1}(\omega r) r^{\frac{d}{2}} \dif{r}.
+    = \int_{\R^d} f(\norm{\bm{r}}) \, e^{i\bm{\omega}^\top \bm{r}} \, \dif{\bm{r}}
+    = \frac{(2\pi)^{\frac{d}{2}}}{\omega^{\frac{d}{2} - 1}} \int_0^\infty f(r)
+  \, J_{\frac{d}{2} - 1}(\omega r) \, r^{\frac{d}{2}} \, \dif{r}.
 \end{align}
 
 We compare two methods of computing $\hat{f}$ for the indicator function of the
 unit disk $f(r) = \ind{0 \leq r \leq 1}$ to absolute error $\epsilon = 10^{-12}$
 at $n$ equispaced points $\omega_j \in [0, \omega_{\text{max}}]$. First, we use
-a Gauss-Legendre quadrature rule on $[0,1]$ with nodes $r_k$ and weights $w_k$.
+a Gauss-Legendre quadrature rule on $[0,1]$ with nodes~$r_k$ and weights~$w_k$.
 We utilize the NUFHT to compute the resulting sum
-\begin{align}
+\begin{equation}
+  \begin{aligned}
   \hat{f}(\omega) 
-  &= 2\pi\int_0^1 f(r) J_0(\omega r) r \dif{r} \\
-  &\approx 2\pi \sum_{k=1}^m w_k f(r_k) J_0(\omega r_k) r_k,
-\end{align}
-doubling the number of nodes $m$ until the error in the computed integral is
-less than $\epsilon$. Second, we build a two-dimensional quadrature rule in
+  &= 2\pi\int_0^1 f(r) \, J_0(\omega r) \, r \, \dif{r} \\
+  &\approx 2\pi \sum_{k=1}^m w_k \, f(r_k) \, J_0(\omega r_k) \, r_k,
+  \end{aligned}
+\end{equation}
+doubling the number of nodes~$m$ until the error in the computed integral is
+less than~$\epsilon$. Second, we build a two-dimensional quadrature rule in
 polar coordinates, using the same $m$-point Gauss-Legendre rule in $r$ and a
 $t_k$-node trapezoidal rule in $\theta$ on each circle of radius $r_k$. We
 double the number of trapezoidal nodes $t_k$ in each circle until the error in
@@ -180,8 +186,11 @@ the corresponding radial integral is less than $\epsilon$. We then utilize the
 2D NUFFT to compute the resulting double sum
 \begin{align}
   \hat{f}(\omega) 
-  &= \frac{1}{4\pi^2} \int_0^{2\pi} \int_0^1 f(r) e^{-i\omega r\cos\theta} r \dif{r} \dif{\theta} \\
-  &\approx \frac{1}{4\pi^2} \sum_{k=1}^{m} w_k r_k f(r_k) \frac{2\pi}{t_k} \sum_{s=1}^{t_k} \exp\left\{-i\omega r_k\cos\left(\frac{2\pi s}{t_k}\right)\right\}.
+  &= \frac{1}{4\pi^2} \int_0^{2\pi} \int_0^1 f(r) \, e^{-i\omega r\cos\theta} \,
+    r \, \dif{r} \dif{\theta} \\
+  &\approx \frac{1}{4\pi^2} \sum_{k=1}^{m} w_k \, r_k \, f(r_k) \,
+    \frac{2\pi}{t_k}
+    \sum_{s=1}^{t_k} \exp\left\{-i\omega r_k \, \cos\left(\frac{2\pi s}{t_k}\right)\right\}.
 \end{align}
 
 If only low frequencies $\omega$ are desired, e.g. $\omega_{\text{max}} = 64$,
@@ -256,65 +265,81 @@ higher frequencies at an only moderately increased cost.
 % the NUFFT, and thus turning them into an analysis-based fast transform remains
 % an open problem.
 
+
+
+
+
 \subsection{A Helmholtz solver using Fourier-Bessel expansions}
 
 Finally, we demonstrate the application of the nonuniform Hankel transform to
 solving partial differential equations using Fourier-Bessel expansions. Consider
-the following inhomogeneous Helmholtz problem on the disk
-\begin{equation} \label{eq:helmholtz}
-  \left\{
-    \begin{array}{@{} r@{\ } l@{} l}
-      (\Delta + \kappa^2) u(r,\theta) &= f(r,\theta) & \qquad 0 \leq r < 1, \quad 0 \leq \theta < 2\pi \\
-      u(1,\theta) &= 0 & \qquad 0 \leq \theta < 2\pi.
-    \end{array}
-  \right.
+the following inhomogeneous Helmholtz problem on the unit disk~$D$
+\begin{equation}
+  \label{eq:helmholtz}
+    \begin{aligned}
+      (\Delta + \kappa^2) u(r,\theta) &= f(r,\theta), & \qquad &\text{for } r\in
+                                                                 [0,1), \quad
+                                                                 \theta \in
+                                                                 [0,2\pi), \\
+      u(1,\theta) &= 0 & \qquad &\text{for } \theta \in [0,2\pi).
+    \end{aligned}
 \end{equation}
 Note that the functions $\psi_{j\ell}(r,\theta) := J_\ell(\mathrm{j}_{\ell,j} r)
 e^{i\ell\theta}$ are the eigenfunctions of the Laplacian on the unit disk with
 homogeneous Dirichlet boundary condition, so that
-\begin{align}
+\begin{equation}
   \Delta \psi_{j\ell}(r,\theta)
-  &= \lambda_{j\ell} \psi_{j\ell}(r,\theta)
-\end{align}
-where $\lambda_{j\ell} = - \mathrm{j}_{\ell,j}^2$ \todocite. Then writing the
-forcing $f$ and solution $u$ in terms of their respective Fourier-Bessel
+  = \lambda_{j\ell} \psi_{j\ell}(r,\theta),
+\end{equation}
+where~$\lambda_{j\ell} = -
+\mathrm{j}_{\ell,j}^2$~\cite{boyd2011comparing,watson1922treatise}. Then, writing
+the forcing function~$f$ and solution~$u$ in terms of their respective Fourier-Bessel
 expansions
-\begin{align}
+\begin{equation}
   f(r,\theta) 
-  &= \sum_{\ell=-\infty}^\infty \sum_{j=1}^\infty \alpha_{j\ell} J_\ell(\mathrm{j}_{\ell,j}r) e^{i\ell\theta}, \qquad
+  = \sum_{\ell=-\infty}^\infty \sum_{j=1}^\infty \alpha_{j\ell} \, 
+  J_\ell(\mathrm{j}_{\ell,j}r) \, e^{i\ell\theta}, \qquad
   u(r,\theta) 
-  = \sum_{\ell=-\infty}^\infty \sum_{j=1}^\infty \beta_{j\ell} J_\ell(\mathrm{j}_{\ell,j}r) e^{i\ell\theta}
-\end{align} 
-diagonalizes \eqref{eq:helmholtz} into a system of independent equations 
-\begin{align}
-  \beta_{j\ell} (\Delta + \kappa^2) \psi_{j\ell}(r, \theta)
-  = \beta_{j\ell} (\lambda_{j\ell} + \kappa^2) \psi_{j\ell}(r, \theta)
-  &= \alpha_{j\ell} \psi_{j\ell}(r, \theta)
-\end{align}
-which implies
-\begin{align}
+  = \sum_{\ell=-\infty}^\infty \sum_{j=1}^\infty \beta_{j\ell} \,
+  J_\ell(\mathrm{j}_{\ell,j}r)
+  \, e^{i\ell\theta}
+\end{equation} 
+decouples~\eqref{eq:helmholtz} into a system of diagonal equations resulting in
+an explicit formula for the~$\beta_{j\ell}$'s:
+%\begin{align}
+%  \beta_{j\ell} (\Delta + \kappa^2) \psi_{j\ell}(r, \theta)
+%  = \beta_{j\ell} (\lambda_{j\ell} + \kappa^2) \psi_{j\ell}(r, \theta)
+%  &= \alpha_{j\ell} \psi_{j\ell}(r, \theta)
+%\end{align}
+%which implies
+\begin{equation}
   \beta_{j\ell} 
-  &= \frac{\alpha_{j\ell}}{\lambda_{j\ell} + \kappa^2}
-\end{align}
-for all $j, \ell$. The Fourier-Bessel coefficients of the forcing $f$ can be
-computed as \todocite
-\begin{align} \label{eq:FB-coef}
+  = \frac{\alpha_{j\ell}}{\lambda_{j\ell} + \kappa^2}.
+\end{equation}
+Due to the orthogonality of the Bessel functions~$J_\ell$,
+the Fourier-Bessel coefficients of the forcing~$f$ can be
+computed as:
+\begin{equation} \label{eq:FB-coef}
   \alpha_{j\ell} 
-  &= \frac{2}{J_{\ell+1}(\mathrm{j}_{\ell,j})^2} \int_0^{2\pi} \int_0^1 f(r,\theta) J_\ell(\mathrm{j}_{\ell,j}r) e^{-i\ell\theta} \, r \dif{r} \dif{\theta}
-\end{align} 
+  = \frac{2}{J_{\ell+1}(\mathrm{j}_{\ell,j})^2} \int_0^{2\pi} \int_0^1
+  f(r,\theta) \, J_\ell(\mathrm{j}_{\ell,j}r) \, e^{-i\ell\theta} \, r \dif{r} \dif{\theta},
+\end{equation}
 and the Fourier-Bessel expansion of the solution $u$ can then be written
 explicitly
-\begin{align}
-  u(r,\theta) = \sum_{\ell=-\infty}^\infty \sum_{j=1}^\infty \frac{\alpha_{j\ell}}{\lambda_{j\ell} + \kappa^2} J_\ell(\mathrm{j}_{\ell,j}r) e^{i\ell\theta}.
-\end{align}
+\begin{equation}
+  u(r,\theta) = \sum_{\ell=-\infty}^\infty \sum_{j=1}^\infty
+  \frac{\alpha_{j\ell}}{\lambda_{j\ell} + \kappa^2} \,
+  J_\ell(\mathrm{j}_{\ell,j}r) \, e^{i\ell\theta}.
+\end{equation}
 By diagonalizing the Laplacian, this Fourier-Bessel solver thus provides a
 direct analogue in the Dirichlet disk setting of spectral methods on a periodic
 rectangle using bivariate Fourier expansions, and inherits many of the merits of
-spectral methods. First, if $f$ and all its derivatives go to zero on $S^1$, and
-$f$ is smooth in $D$, then $\abs{\alpha_{j\ell}} \to 0$ exponentially fast in
-both $j$ and $\ell$ \cite{boyd2011comparing}. In addition, solutions for
-arbitrary $\kappa$ can be evaluated without additional computations involving
-$f$. 
+spectral methods. First, if~$f$ and all its derivatives go to zero at~$r=1$
+and~$f$ is smooth in the interior of~$D$, then $\abs{\alpha_{j\ell}} \to 0$
+exponentially fast in both $j$ and $\ell$ \cite{boyd2011comparing}. In addition,
+solutions for arbitrary~$\kappa$ can be evaluated without additional
+computations involving $f$. (We've assumed that~$\kappa^2$ is not itself a
+Dirichlet eigenvalue of the Laplacian on~$D$.)
 
 To compute the Fourier-Bessel coefficients $\alpha_{j\ell}$ of $f$
 using~\eqref{eq:FB-coef}, we use an $m$-point Gauss-Legendre rule in $r$ and a
@@ -328,7 +353,7 @@ of size $t$, resulting in $\bO(tm\log m + mt\log t)$ total complexity.
 
 This approach does, however, have two main limitations. First is that the
 coefficients of $f$ decrease only algebraically in $j$ if $f$ has nonzero
-derivatives on $S^1$. More precisely, \red{if $\Delta^q f(r) |_{r=1} = 0$ for
+derivatives at~$r=1$. More precisely, \red{if $\Delta^q f(r) |_{r=1} = 0$ for
 all $q \leq p$, then $\abs{\alpha_{j\ell}} \sim j^{-2p -
 \frac{1}{2}}$~\cite{boyd2011comparing}}.  This is a fundamental property of the
 Fourier-Bessel expansion, and does not depend on the numerical method used to
@@ -337,11 +362,11 @@ computational cost of our NUFHT with the order $\ell$, as demonstrated in
 Figure~\ref{fig:both-scaling}. As $\alpha_{j\ell}$ decrease spectrally in $\ell$
 for smooth functions $f$, very large $\ell$ are not often needed. However, as in
 any spectral method, functions with sharp features or discontinuous derivatives
-will give only algebraic decay in $\ell$, requiring more Fourier bases. In such
+will yield only algebraic decay in~$\ell$, requiring more Fourier bases. In such
 cases the corresponding high order NUFHTs become intractable using the method
 described here. 
 
-\begin{figure}
+\begin{figure}[t]
   \centering
   \begin{subfigure}[T]{0.3\textwidth}
     \begin{tikzpicture}
@@ -370,6 +395,12 @@ described here.
   \end{subfigure}
   \caption{Forcing $f$, solution $u$, and log magnitude of Fourier-Bessel
   expansion coefficients $\alpha_{j\ell}$ for \eqref{eq:helmholtz} with $\kappa
-  = 0$.}
+  = 0$. {\color{red} Was there a problem running this example for
+    non-zero~$\kappa$? Otherwise we should call teh section laplace instead
+    of Helmholtz...} }
   \label{fig:helmholtz}
 \end{figure}
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "../main"
+%%% End:

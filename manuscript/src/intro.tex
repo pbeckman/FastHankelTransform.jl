@@ -6,10 +6,12 @@ quasi-linearly with the number of data points~$n$. However, the FFT requires
 that the input signal be sampled at equispaced points in time and that the
 desired output frequencies are equispaced on the integers. These assumptions are
 frequently not met in applications such as adaptive numerical PDE
-solvers~\cite{}, magnetic resonance
+solvers~\cite{alpert2002adaptive,jiang2023dual,askham2017adaptive,nochetto2009theory},
+magnetic resonance
 imaging~\cite{greengard2007fast,bondesson2019nonuniform,bronstein2002reconstruction},
-and various signal processing tasks~\cite{}. To overcome this setback,
-nonuniform FFT (NUFFT) algorithms have been
+and various signal processing
+tasks~\cite{alexander2012adaptive,thakur2011synchrosqueezing}. To overcome this
+setback, nonuniform FFT (NUFFT) algorithms have been
 developed~\cite{dutt1993fast,greengard2004accelerating} which achieve near-FFT
 speeds in one dimension, assuming that the distribution of time samples and
 frequency outputs is not pathological. In higher dimensions, NUFFTs are less
@@ -45,7 +47,7 @@ above transform can be written as
   \begin{aligned}
   g(\omega,\alpha) &= \frac{1}{4\pi^2} \int_0^\infty f(r) \, r \int_0^{2\pi} 
   e^{-i \omega r \cos(\alpha - \theta) }  \, d\theta \, dr \\
-  &= \frac{1}{2\pi} \int_0^\infty f(r) J_0(\omega r) \, r \, dr,
+  &= \frac{1}{2\pi} \int_0^\infty f(r) \, J_0(\omega r) \, r \, dr,
   \end{aligned}
 \end{equation}
 where we have used the integral representation of the zeroth-order Bessel
@@ -99,17 +101,18 @@ equations~\cite{bisseling1985fast,ali1999generalized, zhou2022spectral}. In many
 such applications, a fully nonuniform DHT is desired, as the relevant
 frequencies $\omega_j$ may not be equispaced, and the most efficient quadrature
 rule for discretizing (\ref{eq:HT}) may have nodes $r_k$ which are also not
-equispaced. It is enough to consider the above sum mere with the
+equispaced. It is enough to consider the above sum merely with the
 coefficients~$c_k$. The algorithm of this work allows for arbitrary selection of
 the frequencies~$\omega_j$ and nodes~$r_k$, in contrast to other algorithms
 which require some structure to their location (e.g. equispaced). There are a
 few types of commonly encountered DHTs, all of which our algorithm can address.
-Schl\"omilch expansions~\cite{} take~$r_k \in [0,1]$ and the frequencies are
-chosen as~$\omega_j = j\pi$. Fourier-Bessel expansions, often used in separation
-of variables calculations for PDEs, take the frequencies~$\omega_j$ to be the
-ordered roots of~$J_0$. In the most restrictive case, as discussed
-in~\cite{johnson1987}, the frequencies~$\omega_j$ are set to be the ordered
-roots of~$J_\nu$, and the nodes~$r_k$ a re set to be scaled roots of~$J_\nu$,
+Schl\"omilch expansions~\cite{linton2006schlomilch,townsend2015fast}
+take~$r_k \in [0,1]$ and the frequencies are chosen as~$\omega_j =
+j\pi$. Fourier-Bessel expansions, often used in separation of variables
+calculations for PDEs, take the frequencies~$\omega_j$ to be the ordered roots
+of~$J_0$. In the most restrictive case, as discussed in~\cite{johnson1987improved}, the
+frequencies~$\omega_j$ are set to be the ordered roots of~$J_\nu$, and the
+nodes~$r_k$ a re set to be scaled roots of~$J_\nu$,
 i.e.~$r_k = \mathrm{j}_{\nu,k}/\mathrm{j}_{\nu,k+1}$ where~$\mathrm{j}_{\nu,k}$
 is the~$k$th largest root of~$J_\nu$ (which doesn't explicitly appear in the sum
 above). Analogues of all these special cases exist when~$J_0$ is replaced with a
@@ -196,4 +199,9 @@ Section~\ref{sec:results}, and we conclude with some additional discussion in
 Section~\ref{sec:discussion}.
 
 
-%%% Local Variables: %% mode: latex %% TeX-master: "../main" %% End:
+
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "../main"
+%%% End:

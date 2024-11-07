@@ -6,7 +6,7 @@ equivalent matrix-vector product with $\mtx{A} \in \R^{m \times n}$
 \end{equation}
 The matrix $\mtx{A}$ is in general full rank and possesses complex oscillatory
 structure. As a result, no straightforward fast algorithm exists to apply the
-full matrix $\mtx{A}$ to a vector. However, we devise an NUFHT by noting that
+full matrix $\mtx{A}$ to a vector. However, we design an NUFHT by noting that
 certain \textit{blocks} $\mtx{A}(j_0:j_1, k_0:k_1)$ are able to be applied to a
 vector rapidly using analytical expansions of the underlying Bessel function
 $J_\nu$. 
@@ -43,7 +43,8 @@ regions $\omega_j r_k \leq z$ and $\omega_j r_k > z$ respectively. Next, we
 adaptively subdivide $\mtx{A}$ into disjoint blocks so that either $\omega_j r_k
 \leq z$ or $\omega_j r_k > z$ for all $\omega_j$ and all $r_k$ in each block.
 This leaves only a few small blocks with $\omega_j r_k \approx z$ whose entries
-can be directly computed. Figure~\ref{fig:subdivide} shows a Hankel transform
+can be directly computed, and which can directly applied.
+Figure~\ref{fig:subdivide} shows a Hankel transform
 matrix $\mtx{A}$ divided into local and asymptotic entries along the curve
 $\omega r = z$, as well as the corresponding adaptive subdivision of the matrix
 into blocks which can be rapidly applied. Following the subdivision step, all
@@ -85,3 +86,7 @@ using the corresponding fast method.
   sub-blocks at various levels.}
   \label{fig:subdivide}
 \end{figure}
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "../main"
+%%% End:
