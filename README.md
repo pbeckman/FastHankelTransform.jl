@@ -29,4 +29,4 @@ cs = randn(10_000)
 # compute NUFHT
 gs = nufht(nu, rs, cs, ws; tol=tol)
 ```
-See the `scripts` directory for more detailed, heavily commented demos. 
+See the `example` directory for more detailed, heavily commented demos. 
