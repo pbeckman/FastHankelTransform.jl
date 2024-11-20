@@ -1,0 +1,15 @@
+name = "FastHankelTransform"
+uuid = "3a9aa71a-4826-43c7-bf6d-7fc63822c18e"
+authors = ["Paul Beckman <paul.beckman@cims.nyu.edu>"]
+version = "0.1.0"
+
+[deps]
+Bessels = "0e736298-9ec6-45e8-9647-e4fc86a2fe38"
+FINUFFT = "d8beea63-0952-562e-9c6a-8e8ef7364055"
+ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
+JLD = "4138dd39-2aa7-5051-a626-17a0bb65d9c8"
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+Polynomials = "f27b6e38-b328-58d1-80ce-0feddd5e7a45"
+Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
+SpecialFunctions = "276daf66-3868-5448-9aa4-cd146d93841b"
+TimerOutputs = "a759f4b9-e2f1-59dc-863e-4aeb61b1ea8f"
