@@ -7,8 +7,9 @@ to compute the nonuniform fast Hankel transform (NUFHT)
    \qquad \text{for } j = 1, \ldots, m
 ```
 to a user-specified tolerance $\varepsilon$. The frequencies $\omega_j$ and
-source locations $r_k$ can be arbitrary chosen and need not lie on a grid. The
-computational cost of our approach scales quasilinearly with $n$ and $m$.
+source locations $r_k$ can be arbitrarily chosen and need not lie on a grid. The
+computational cost of our approach is near optimal, scaling quasilinearly with
+$n$ and $m$.
 
 A minimal demo is as follows:
 ```julia

@@ -1,5 +1,5 @@
 % SIAM Article Template
-\documentclass[review,hidelinks,onefignum,onetabnum]{siamart220329}
+\documentclass[final,hidelinks,onefignum,onetabnum]{siamart220329}
 
 % Information that is shared between the article and the supplement
 % (title and author information, macros, packages, etc.) goes into
@@ -41,6 +41,8 @@
 \setlist[itemize]{leftmargin=2em, topsep=0.5\baselineskip, itemsep=0.5\baselineskip}
 
 \input{preamble.tex}
+\newcommand{\Bloc}{B^{\textsc{\tiny \hspace*{-1pt} loc}}_{\nu,L}} 
+\newcommand{\Basy}{B^{\textsc{\tiny \hspace*{-1pt} asy}}_{\nu,M}} 
 
 \def\spacingset#1{\renewcommand{\baselinestretch}%
 {#1}\small\normalsize} \spacingset{1}
@@ -123,7 +125,7 @@ Hankel transform, fast Fourier transform, asymptotic expansion, Bessel function
 
 % REQUIRED
 \begin{MSCcodes}
-XXXX, XXXX, XXXX
+65R10, 33C10
 \end{MSCcodes}
 
 \section{Introduction} 
