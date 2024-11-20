@@ -1,0 +1,27 @@
+
+In this manuscript we have presented a fast algorithm for computing discrete Hankel
+transforms of moderate orders from $n$ nonuniform points to $m$ nonuniform
+frequencies in $\bO\big((m+n)\log\min(n,m)\big)$ operations. The algorithm
+relies on a careful space-frequency analysis of the Bessel function kernel,
+judicious use of small-argument series expansions and large-argument asymptotic
+expansions, as well as a small number of direct calculations. The algorithm
+makes no assumptions on the distribution of points in space and frequency --- it
+applies to the fully nonuniform case --- and can be used for Hankel transforms
+of higher order with a modest increase in computational cost. More importantly,
+the algorithm does not require any precomputation, in contrast to algorithms
+based on butterfly factorizations of the Hankel transform matrix. Significant
+speedups over the direct calculation have been demonstrated, as well as
+asymptotic scaling of the computational complexity. An implementation of the
+algorithm of this paper is available as an open-source Julia package at
+\href{https://github.com/pbeckman/FastHankelTransform.jl}{\texttt{github.com/pbeckman/FastHankelTransform.jl}}.
+
+In order to efficiently extend our algorithm to compute arbitrarily high-order
+Hankel transforms which are needed for higher-order Fourier-Bessel expansions
+and in various high-dimensional statistical
+settings~\cite{lord1954a,nolan2013multivariate}, alternative expansions and
+asymptotics of~$J_\nu$ need to be used or derived. This is the focus of ongoing
+research.
+
+
+
+%%% Local Variables: % mode: latex % TeX-master: "../main" % End:

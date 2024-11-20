@@ -1,0 +1,200 @@
+
+The fast Fourier transform (FFT) has revolutionized a wide range of applications
+across mathematics, statistics, and the physical sciences by enabling signal
+processing and Fourier analysis tasks to be performed using a computational cost
+which scales quasi-linearly with the number of data points~$n$. However, the FFT
+requires that the input signal be sampled at equispaced points in time and that
+the desired output frequencies are equispaced on the integers. These assumptions
+are frequently not met in applications such as adaptive numerical partial
+differential equation (PDE)
+solvers~\cite{alpert2002adaptive,jiang2023dual,askham2017adaptive,nochetto2009theory},
+magnetic resonance
+imaging~\cite{greengard2007fast,bondesson2019nonuniform,bronstein2002reconstruction},
+and various signal processing
+tasks~\cite{alexander2012adaptive,thakur2011synchrosqueezing}. To overcome this
+setback, nonuniform FFT (NUFFT) algorithms have been
+developed~\cite{dutt1993fast,greengard2004accelerating} which achieve near-FFT
+speeds in one dimension, assuming that the distribution of time samples and
+frequency outputs is not pathological. In higher dimensions, NUFFTs are less
+competitive with standard FFTs, but the computational task at hand is also
+significantly harder.
+
+The FFT and NUFFT grew out of a need to perform Fourier transforms in Cartesian
+coordinates. However, depending on the particular problem, the relevant
+continuous Fourier analysis might be better suited to other coordinate systems.
+One such commonly encountered situation is computing the Fourier transform of
+radially symmetric functions in dimensions~$d \geq 2$. For example, in two
+dimensions the Fourier transform of a function~$f$ is given by
+\begin{equation}
+  g(\omega_1, \omega_2) = \frac{1}{4\pi^2} \iint_{\R^2} f(x_1, x_2) \, 
+  e^{-i(\omega_1 x_1 + \omega_2 x_2)}  \, dx_1 \, dx_2.
+\end{equation}
+Transforming to polar coordinates~$(\omega_1,\omega_2) \mapsto (\omega,\alpha)$
+and~$(x_1,x_2) \mapsto (r,\theta)$ the above expression becomes
+\begin{equation}
+  \label{eq:ftpolar}
+  \begin{aligned}
+    g(\omega, \alpha) &= \frac{1}{4\pi^2} \int_0^{2\pi} \int_0^\infty
+    f(r,\theta) \, 
+    e^{-i \omega r (\cos\alpha \cos\theta + \sin\alpha \sin\theta) } 
+    \, r \, dr \, d\theta \\
+  &= \frac{1}{4\pi^2} \int_0^{2\pi} \int_0^\infty f(r,\theta) \, e^{-i \omega r \cos(\alpha-\theta) } \, r \, dr \, d\theta.
+  \end{aligned}
+\end{equation}
+Furthermore, if~$f$ is radially symmetric, i.e.~$f(r, \theta) = f(r)$, then the
+above transform can be written as
+\begin{equation}
+  \label{eq:HT}
+  \begin{aligned}
+  g(\omega,\alpha) &= \frac{1}{4\pi^2} \int_0^\infty f(r) \, r \int_0^{2\pi} 
+  e^{-i \omega r \cos(\alpha - \theta) }  \, d\theta \, dr \\
+  &= \frac{1}{2\pi} \int_0^\infty f(r) \, J_0(\omega r) \, r \, dr,
+  \end{aligned}
+\end{equation}
+where we have used the integral representation of the zeroth-order Bessel
+function~\cite{olver2010nist}
+\begin{equation}
+  J_0(x) 
+  = \frac{1}{\pi} \int_0^\pi \cos \left( x \cos \theta \right) \, d\theta.
+\end{equation}
+The final integral involving~$J_0$ in equation~\eqref{eq:HT} is known as a
+\emph{Hankel Transform} of order 0 --- usually referred to simply as a Hankel
+Transform. 
+
+In higher ambient dimensions, the Fourier transform of radially symmetric
+functions reduces to a Hankel transform of higher order. Similarly, if the
+function~$f$ in~\eqref{eq:ftpolar} has a particular periodic dependence
+in~$\theta$ so that $f(r,\theta) = f(r)e^{i\nu\theta}$ with $\nu \in \Z$, then
+we have
+\begin{equation} \label{eq:FB-integral}
+  \begin{aligned}
+  g(\omega,\alpha) &= \frac{1}{4\pi^2} \int_0^\infty f(r) \, r \int_0^{2\pi} 
+  e^{-i \omega r \cos(\alpha - \theta) } \, e^{i\nu\theta}  \, d\theta \, dr \\
+  &= \frac{i^\nu}{2\pi} \int_0^\infty f(r) \, r \, J_\nu(\omega r)  \, dr,
+  \end{aligned}
+\end{equation}
+where, again, we have invoked an integral representation
+for~$J_\nu$~\cite{olver2010nist}. 
+
+In order to numerically compute~$g$ in~\eqref{eq:HT} or~\eqref{eq:FB-integral}
+at a collection of~$m$ ``frequencies''~$\omega_j$, the Hankel transform must be
+discretized using an appropriate quadrature rule with nodes $r_k$ and weights
+$w_k$ which depend on the particular class of~$f$ for which the integral is
+desired. In general this results in the need for computing
+\begin{equation} \label{eq:DHT}
+  \begin{aligned}
+  g(\omega_j) \approx 
+  g_j &:= \sum_{k=1}^n w_k \, f(r_k) \, r_k \, J_\nu(\omega_j r_k) \\
+  &\ = \sum_{k=1}^n c_k \, J_\nu(\omega_j r_k)
+   \qquad \text{for } j = 1, \ldots, m.
+  \end{aligned}
+\end{equation}
+The above sum will be referred to as the Discrete Hankel Transform (DHT) of
+order $\nu$. 
+
+In our motivating example --- computing the continuous Fourier transform --- the
+DHT arises from the discretization of the radially symmetric Fourier integral.
+The DHT also appears in a wide range of applications including
+imaging~\cite{higgins1988hankel, zhao2013fourier, marshall2023fast},
+statistics~\cite{lord1954a, genton2002nonparametric}, and separation of
+variables methods in partial differential
+equations~\cite{bisseling1985fast,ali1999generalized, zhou2022spectral}. In many
+such applications, a fully nonuniform DHT is desired, as the relevant
+frequencies $\omega_j$ may not be equispaced, and the most efficient quadrature
+rule for discretizing (\ref{eq:HT}) may have nodes $r_k$ which are also not
+equispaced. 
+
+The algorithm of this work allows for arbitrary selection of the
+frequencies~$\omega_j$ and nodes~$r_k$, in contrast to other algorithms which
+require some structure to their location (e.g. equispaced or exponentially
+distributed). There are a few types of commonly encountered DHTs, all of which
+our algorithm can address. Schl\"omilch
+expansions~\cite{linton2006schlomilch,townsend2015fast} take
+frequencies~$\omega_j = j\pi$. Fourier-Bessel expansions --- often used in
+separation of variables calculations for PDEs --- take frequencies~$\omega_j =
+\beta_{\nu,j}$, where $\beta_{\nu,j}$ denotes the $j^{th}$ root of $J_\nu$. In
+the most restrictive cases~\cite{johnson1987improved}, one fixes both~$\omega_j
+= \beta_{\nu,j}$ and~$r_k = \beta_{\nu,k}/\beta_{\nu,k+1}$.
+
+\subsection*{Existing methods}
+\label{sec:existing}
+
+A number of methods exist in the literature to evaluate (\ref{eq:HT}) and
+(\ref{eq:DHT}). These include series expansion methods
+\cite{lord1954b,brunol1977fourier,cavanagh1979numerical}, convolutional
+approaches \cite{siegman1977quasi, johansen1979fast, mook1983algorithm,
+liu1999nonuniform}, and projection-slice or Abel transform-based methods
+\cite{oppenheim1980computation, hansen1985fast, kapur1995algorithm}.
+See~\cite{cree1993algorithms} for a review of many of these early computational
+approaches. Unfortunately, these existing methods are either not applicable to
+the discrete case, require a particular choice of $\omega_j$ or $r_k$ due to the
+constraints of interpolation or quadrature subroutines, or suffer from low
+accuracy as a result of intermediate approximations. Therefore, extending these
+schemes to compute the fully nonuniform DHT with controllable accuracy is not
+straightforward.
+
+A notable contribution is~\cite{liu1999nonuniform}, which describes a fully
+nonuniform fast Hankel transform. This work takes the popular convolutional
+approach, using a change of variables to reformulate the Hankel transform as a
+convolution with a known kernel which can be evaluated using the NUFFT. However,
+its accuracy is limited by the need for a quadrature rule on the nonuniform
+points $r_k$. The authors use an irregular trapezoidal rule for this purpose,
+which is not high-order accurate. This method also requires the computation of
+the inverse NUFFT using conjugate gradients. For even moderately clustered
+points or frequencies, this inverse problem is extremely ill-conditioned, and
+thus the number of required iterations can be prohibitive. This method is
+therefore suitable for ``quasi-equispaced'' points and frequencies, but is not
+tractable in general.
+
+More recently, butterfly algorithms \cite{oneil2010algorithm, li2015butterfly,
+pang2020interpolative} were introduced as a broadly applicable methodology for
+rapidly computing oscillatory transforms including the nonuniform DHT. However,
+these algorithms require a precomputation or factorization stage for each new
+set of $\omega_j$ and $r_k$. Such precomputations can, unfortunately, be a
+bottleneck for applications in which these evaluation points change with each
+iteration or application of the transform. In order to provide a
+precomputation-free fast DHT,~\cite{townsend2015fast} employs a combination of
+asymptotic expansions and Bessel function identities evaluated using the
+equispaced FFT. The resulting scheme is applicable to equispaced or perturbed
+``quasi-equispaced'' grids in space and frequency, for example $\omega_j =
+\beta_{0,j}$ and $r_k = \beta_{0,k} / \beta_{0,n+1}$.
+
+\subsection*{Novelty of this work}
+\label{sec:novelty}
+
+% At a high level, our algorithm can be viewed as a generalization of the one
+% described in~\cite{townsend2015fast}. In~\cite{townsend2015fast}, asymptotic
+% expansions were used to replace~$J_0$ for various arguments. These asymptotic
+% expansions involved trigonometic functions, resulting in a fast algorithm for
+% computing the DHT using fast cosine transforms (FCTs) and fast sine transforms
+% (FSTs). In order to invoke these fast algorithms, various assumptions
+% on~$\omega_j$ and~$r_k$ had to be made.
+
+We describe here a precomputation-free nonuniform fast Hankel transform (NUFHT)
+which generalizes~\cite{townsend2015fast} to the fully nonuniform setting in a
+number of ways. First, we employ an adaptive partitioning scheme which, for any
+choice of $\omega_j$ and $r_k$, subdivides the matrix with
+entries~$J_\nu(\omega_j r_k)$ into blocks for which matrix-vector products can
+be evaluated efficiently. Second, we use the NUFFT to evaluate asymptotic
+expansions for nonuniform $r_k$ and $\omega_j$. Finally, we utilize the low-rank
+expansion of $J_\nu$ given in~\cite{wimp1962polynomial} in the local regime
+where asymptotic expansions are not applicable. We derive error bounds for this
+low-rank expansion, allowing us to choose all approximation parameters
+automatically by analysis which guarantees that the resulting error is bounded
+by the user-specified tolerance $\epsilon$.
+
+\subsection*{Outline of the paper}
+
+The paper is organized as follows. In Section~\ref{sec:overview} we give a high
+level view of our algorithm, omitting technical details. Then in
+Section~\ref{sec:approx} we study the local and asymptotic expansions of Bessel
+functions which serve as the key building blocks of the algorithm. Afterward, in
+Section~\ref{sec:methods}, we provide a detailed description of the algorithm
+and its associated complexity. Various numerical examples are provided in
+Section~\ref{sec:results}, and we conclude with some additional discussion in
+Section~\ref{sec:discussion}.
+
+
+
+
+%%% Local Variables: %% mode: latex %% TeX-master: "../main" %% End:

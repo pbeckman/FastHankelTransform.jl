@@ -1,0 +1,13 @@
+*.aux
+*.bbl
+*.blg
+*.fdb*
+*.fls
+*.log
+*.out
+*.pdf
+*.gz
+*.thm
+*.el
+*.aux
+*.jld
