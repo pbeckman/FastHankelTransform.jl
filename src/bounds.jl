@@ -10,14 +10,24 @@ function generate_tables()
     # path to tables
     path = join(split(pathof(FastHankelTransform), '/')[1:end-2], '/') * "/tables/"
 
-    as = generate_asy_a_table(nus_all, max_asy_K)
-    save(path * "asy_a_table.jld", "as", as)
+    @printf("\n--------------------
+Generating tables
+--------------------\n")
 
-    zs = generate_asy_z_table(nus_int, asy_Ks, tols)
-    save(path * "asy_z_table.jld", "zs", zs)
+    t = @elapsed begin
+        as = generate_asy_a_table(nus_all, max_asy_K)
+        save(path * "asy_a_table.jld", "as", as)
 
-    Ks = generate_wimp_K_table(nus_int, asy_Ks, zs, tols)
-    save(path * "wimp_K_table.jld", "Ks", Ks)
+        zs = generate_asy_z_table(nus_int, asy_Ks, tols)
+        save(path * "asy_z_table.jld", "zs", zs)
+
+        Ks = generate_wimp_K_table(nus_int, asy_Ks, zs, tols)
+        save(path * "wimp_K_table.jld", "Ks", Ks)
+    end
+
+    @printf("\n--------------------
+Tables succesfully generated! (%.1f s)
+--------------------\n", t)
 end
 
 # coefficients in Hankel's expansion

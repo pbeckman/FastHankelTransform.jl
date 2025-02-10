@@ -23,7 +23,7 @@ tol = 1e-12
 ws = 10 .^ range(-2, 2, 100_000)
 
 # source locations r_k and strengths c_k
-rs = rand(10_000)
+rs = sort(rand(10_000))
 cs = randn(10_000)
 
 # compute NUFHT

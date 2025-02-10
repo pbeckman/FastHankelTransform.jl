@@ -104,6 +104,11 @@ function setup_nufht!(nu, tol; z_split=nothing, K_asy=nothing, K_loc=nothing)
     # path to tables
     path = join(split(pathof(FastHankelTransform), '/')[1:end-2], '/') * "/tables/"
 
+    # generate tables if they don't yet exist
+    if !isdir(path)
+        generate_tables()
+    end
+
     # set order
     i = abs(nu) + 1
     global NUFHT_NU[]       = nu
