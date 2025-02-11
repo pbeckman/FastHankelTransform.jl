@@ -1,7 +1,7 @@
 name = "FastHankelTransform"
 uuid = "3a9aa71a-4826-43c7-bf6d-7fc63822c18e"
 authors = ["Paul Beckman <paul.beckman@cims.nyu.edu>"]
-version = "0.1.0"
+version = "0.1.1"
 
 [deps]
 Bessels = "0e736298-9ec6-45e8-9647-e4fc86a2fe38"
