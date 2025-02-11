@@ -70,8 +70,9 @@ function nufht!(gs, nu, rs, cs, ws;
             ), 
         (gs, nu, rs, cs, ws) -> add_asy!(
             gs, nu, rs, cs, ws, K=NUFHT_ASY_K[], 
-            in_buffer=view(in_buffer, 1:length(rs)),
-            out_buffer=view(out_buffer, 1:length(ws)),
+            # TODO (pb 2/10/24): ask FINUFFT.jl to accept SubArrays
+            # in_buffer=view(in_buffer, 1:length(rs)),
+            # out_buffer=view(out_buffer, 1:length(ws)),
             real_buffer_1=view(real_buffer_1, 1:length(ws)),
             real_buffer_2=view(real_buffer_2, 1:length(ws))
             ),
@@ -80,7 +81,9 @@ function nufht!(gs, nu, rs, cs, ws;
         for (i0b, i1b, j0b, j1b) in box_set
             add_box!(
                 view(gs, i0b:i1b), abs(nu),
-                view(rs, j0b:j1b), view(cs, j0b:j1b), view(ws, i0b:i1b)
+                rs[j0b:j1b], # view(rs, j0b:j1b), 
+                view(cs, j0b:j1b), 
+                ws[i0b:i1b]  # view(ws, i0b:i1b)
                 )
         end
     end
