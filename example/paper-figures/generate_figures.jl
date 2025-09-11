@@ -31,5 +31,5 @@ scrungle = color.([
 # @printf("\n\nGENERATING FIGURE 6 (this will take minutes to hours)\n\n")
 # include("fourier_scaling_fig.jl")
 
-@printf("\n\nGENERATING FIGURE 7\n\n")
+@printf("\n\nGENERATING FIGURE 7 (this will take a few minutes)\n\n")
 include("fourier_bessel_fig.jl")
