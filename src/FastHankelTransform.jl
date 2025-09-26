@@ -1,6 +1,6 @@
 module FastHankelTransform
 
-    using LinearAlgebra, FINUFFT
+    using LinearAlgebra, FINUFFT, ForwardDiff
     using JLD, Printf, TimerOutputs
     import Bessels: besselj, besselj!
 

@@ -2,8 +2,6 @@ using FastHankelTransform, FastGaussQuadrature, BenchmarkTools, Plots, Plots.Mea
 
 Random.seed!(123)
 
-include("/Users/beckman/.julia/config/custom_colors.jl")
-
 # set up plotting
 gr(size=(350,300))
 default(margins=1mm, fontfamily="Computer Modern", label="")
@@ -71,7 +69,7 @@ else
     p_timings = fill(NaN, 2, length(ps))
     for (case, timings) in zip([:n, :m, :p], [n_timings, m_timings, p_timings])
         for i in axes(timings, 2)
-            rs, cs, ws, n, m, p = test_case(case, ns, ps, i)
+            local rs, cs, ws, n, m, p = test_case(case, ns, ps, i)
 
             @printf(
                 "Timing %s scaling with n = %i, m = %i, p = %.1e (%i of %i)\n", 

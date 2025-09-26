@@ -15,7 +15,7 @@ function quad1D(m, a, b)
     return rs, wts
 end
 
-# we need a precomputed table with 10,000 roots of orders nu=0,...,1000.
+# we need a precomputed table with many Bessel function roots of many orders.
 # i'm not aware of a Julia package that does this accurately...
 # these roots were computed using code from Michael O'Neil implementing:
 #
@@ -129,21 +129,6 @@ function compute_FB_series(f; tol=1e-8)
     return bs, rs, ts
 end
 
-function dense_eval_FB_series(bs, rs, ts)
-    mr = size(bs, 1)
-    mt = div(size(bs, 2)-1, 2)
-    ks = -mt:mt
-
-    fs = zeros(ComplexF64, length(rs), length(ts))
-    for (i, k) in enumerate(ks)
-        for j=1:mr
-            fs .+= bs[j,i] * besselj.(k, bessel_roots[abs(k)+1,j]*rs) * exp.(im*k*ts)
-        end
-    end
-
-    return fs
-end
-
 function eval_FB_series(bs; tol=1e-8)
     mr = size(bs, 1)
     mt = div(size(bs, 2)-1, 2)
@@ -163,20 +148,21 @@ function eval_FB_series(bs; tol=1e-8)
 end
 
 # define random forcing f
-taper(r, r0) = r > 1 ? NaN : (1 - r^2)*(1 + 16r^2/43 - r^4/43) / (1 + 4r^2)
+# taper(r) = r > 1 ? NaN : (1 - r^2)*(1 + 16r^2/43 - r^4/43) / (1 + 4r^2)
+taper(r) = r > 1 ? NaN : (1 - r^2) * (1 + 2r^2/11 - r^4/11) / (1 + r^2)
 Random.seed!(0)
 nbl = 100
 tbl = 2pi * rand(nbl)
 cs = log.(1 .+ 2rand(nbl)) .* [cos.(tbl) sin.(tbl)]
 vs = randn(nbl)
 ps = 0.15 .+ log.(1 .+ 0.2rand(nbl))
-f(r::Float64,t::Float64) = 100 * taper(r, 0) * sum(
+f(r::Float64,t::Float64) = 100 * taper(r) * sum(
     v * exp(-(norm([r*cos(t), r*sin(t)] - c) / p)^2) for (v, c, p) in zip(vs, eachrow(cs), ps)
 )
 f(rs::AbstractArray{Float64}, ts::AbstractArray{Float64}) = f.(rs, ts)
 
 # compute Fourier-Bessel coefficients of f to given tolerance
-tol = 1e-6
+tol = 5e-9
 bs, rs, ts = compute_FB_series(f, tol=tol)
 
 # evaluate Fourier-Bessel approximation to f at tensor product points
@@ -214,10 +200,10 @@ mr = size(bs, 1)
 mt = div(size(bs, 2)-1, 2)
 ks = -mt:mt
 pl = heatmap(
-    ks, 1:mr, log10.(abs.(bs)), clims=(-8, 0), dpi=300,
+    ks, 1:mr, log10.(abs.(bs)), clims=(-10, 0), dpi=300,
     xlabel=L"\ell", ylabel=L"j",
     yflip=true, c=palette(:Purples),
-    margins=5mm
+    margins=5mm, yticks=(0:4000:mr, string.(0:4000:mr))
     )
 display(pl)
 savefig(pl, "./figures/helmholtz_f_coef.pdf")

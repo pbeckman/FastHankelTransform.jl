@@ -5,7 +5,7 @@ if !isdir("./figures")
 end
 
 # define color palette used in figures
-scrungle = color.([
+scrungle = parse.(RGB, [
     "#114982" # blue
     "#FF8080" # red
     "#00A61C" # green

@@ -81,7 +81,7 @@ for level=1:num_levels
     z_split=z, min_dim_prod=100,
     max_levels=level
     )
-    pl = heatmap(
+    local pl = heatmap(
         number_boxes(n, m, boxes, w=4) .* ([zeros(2w); ones(m-4w); zeros(2w)]) .* ([zeros(2w); ones(m-4w); zeros(2w)])', 
         yflip=true, 
         legend=:none, axis=([], false),
