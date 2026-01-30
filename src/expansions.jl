@@ -81,8 +81,8 @@ function add_loc!(gs, nu, rs, cs, ws;
     end
 end
 
-function add_asy!(gs, nu, rs, cs, ws; 
-    K=5, in_buffer=nothing, 
+function add_asy!(gs, nu, rs, cs, ws, asy_coef; 
+    K=5, tol=1e-15, in_buffer=nothing, 
     out_buffer=nothing, real_buffer_1=nothing, real_buffer_2=nothing)
     @timeit TIMER "Asymptotic" begin
         # initialize temporary buffers for NUFFTs
@@ -105,10 +105,7 @@ function add_asy!(gs, nu, rs, cs, ws;
                 in_buffer .= cs .* (rs.^(-2l-1)) .* sqrt.(rs)
             end
             @timeit TIMER "NUFFT" begin
-                nufft1d3!(
-                    rs, in_buffer, +1, NUFHT_TOL[], 
-                    ws, out_buffer
-                )
+                nufft1d3!(rs, in_buffer, +1, tol, ws, out_buffer)
             end
             @timeit TIMER "Add NUFFT to output" begin
                 out_buffer .*= cispi(-nu/2-1/4)
@@ -119,7 +116,7 @@ function add_asy!(gs, nu, rs, cs, ws;
                     real_buffer_2[j] = (ws[j]^(-2l-1))*sqrt(ws[j])
                 end
                 # multiply by coefficient and do diagonal scaling
-                real_buffer_1 .*= sqrt(2/pi) * (-1)^l * NUFHT_ASY_COEF[][2l+1]
+                real_buffer_1 .*= sqrt(2/pi) * (-1)^l * asy_coef[2l+1]
                 real_buffer_1 .*= real_buffer_2
                 gs            .+= real_buffer_1
             end
@@ -129,10 +126,7 @@ function add_asy!(gs, nu, rs, cs, ws;
                 in_buffer .= cs .* (rs.^(-2l-2)) .* sqrt.(rs)
             end
             @timeit TIMER "NUFFT" begin
-                nufft1d3!(
-                    rs, in_buffer, +1, NUFHT_TOL[], 
-                    ws, out_buffer
-                ) 
+                nufft1d3!(rs, in_buffer, +1, tol, ws, out_buffer) 
             end
             @timeit TIMER "Add NUFFT to output" begin
                 out_buffer .*= cispi(-nu/2-1/4)
@@ -144,7 +138,7 @@ function add_asy!(gs, nu, rs, cs, ws;
                     real_buffer_2[j] = (ws[j]^int_exp)*sqrt(ws[j])
                 end
                 # multiply by coefficient and do diagonal scaling
-                real_buffer_1 .*= sqrt(2/pi) * (-1)^l * NUFHT_ASY_COEF[][2l+2]
+                real_buffer_1 .*= sqrt(2/pi) * (-1)^l * asy_coef[2l+2]
                 real_buffer_1 .*= real_buffer_2
                 gs            .-= real_buffer_1
             end

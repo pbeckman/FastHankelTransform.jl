@@ -21,14 +21,14 @@ function nufht!(gs, nu, rs, cs, ws;
     @assert length(rs) == length(cs)
     @assert length(gs) == length(ws)
 
-    if any([nu, tol, z_split, K_asy, K_loc] .!= [NUFHT_NU, NUFHT_TOL, NUFHT_Z_SPLIT, NUFHT_ASY_K, NUFHT_LOC_K])
-        # different parameters are being used
-        # set global variables according to error analysis
-        setup_nufht!(nu, tol, z_split=z_split, K_asy=K_asy, K_loc=K_loc)
-    end
-
     n = length(ws)
     m = length(rs)
+
+    # retrieve necessary parameters based on order and tolerance
+    K_loc, K_asy, asy_coef, z_split = setup_nufht(
+        nu, tol; 
+        z_split=z_split, K_asy=K_asy, K_loc=K_loc
+        )
 
     if n*m < min_dim_prod
         # matrix is small enough that direct summation will be faster
@@ -36,13 +36,13 @@ function nufht!(gs, nu, rs, cs, ws;
         return gs
     elseif !isinteger(nu)
         # asymptotic expansion is analytic for half integer orders
-        add_asy!(gs, nu, rs, cs, ws, K=NUFHT_ASY_K[])
+        add_asy!(gs, nu, rs, cs, ws, asy_coef, K=K_asy, tol=tol)
         return gs
     end
 
     @timeit TIMER "Generate boxes" begin
         boxes = generate_boxes(
-            rs, ws, z_split=NUFHT_Z_SPLIT[]; 
+            rs, ws, z_split, K_loc; 
             max_levels=max_levels, min_dim_prod=min_dim_prod
             )
     end
@@ -53,23 +53,23 @@ function nufht!(gs, nu, rs, cs, ws;
         out_buffer = zeros(ComplexF64, n)
         real_buffer_1 = zeros(Float64, n)
         real_buffer_2 = zeros(Float64, n)
-        cheb_buffer     = zeros(Float64, NUFHT_LOC_K[]+1)
-        bessel_buffer_1 = zeros(Float64, NUFHT_LOC_K[]+1)
+        cheb_buffer     = zeros(Float64, K_loc+1)
+        bessel_buffer_1 = zeros(Float64, K_loc+1)
         bessel_buffer_2 = zeros(
-            Float64, NUFHT_LOC_K[]+1+div(abs(nu),2)+isodd(nu)
+            Float64, K_loc+1+div(abs(nu),2)+isodd(nu)
             )
     end
 
     # add contributions of all boxes
     for (box_set, add_box!) in zip(boxes, (
         (gs, nu, rs, cs, ws) -> add_loc!(
-            gs, nu, rs, cs, ws, K=NUFHT_LOC_K[],
+            gs, nu, rs, cs, ws, K=K_loc,
             cheb_buffer=cheb_buffer, 
             bessel_buffer_1=bessel_buffer_1, 
             bessel_buffer_2=bessel_buffer_2
             ), 
         (gs, nu, rs, cs, ws) -> add_asy!(
-            gs, nu, rs, cs, ws, K=NUFHT_ASY_K[], 
+            gs, nu, rs, cs, ws, asy_coef, K=K_asy, tol=tol,
             # TODO (pb 2/10/24): ask FINUFFT.jl to accept SubArrays
             # in_buffer=view(in_buffer, 1:length(rs)),
             # out_buffer=view(out_buffer, 1:length(ws)),
@@ -96,7 +96,7 @@ function nufht!(gs, nu, rs, cs, ws;
     return gs
 end
 
-function setup_nufht!(nu, tol; z_split=nothing, K_asy=nothing, K_loc=nothing)
+function setup_nufht(nu, tol; z_split=nothing, K_asy=nothing, K_loc=nothing)
     if tol < 1e-15
         error("cannot set NUFHT tolerance below 1e-15")
     end
@@ -104,43 +104,29 @@ function setup_nufht!(nu, tol; z_split=nothing, K_asy=nothing, K_loc=nothing)
         error("only NUFHT with integer orders ν = 0,±1,...,±200 and half-integer orders ν = 1/2,3/2,...,19/2 are implemented") 
     end
 
-    # path to tables
-    path = join(split(pathof(FastHankelTransform), '/')[1:end-2], '/') * "/tables/"
+    # read Hankel expansion coefficients from table
+    asy_coef = ASY_COEF_TABLE[Int64(2abs(nu) + 1), :]
 
-    # generate tables if they don't yet exist
-    if !isdir(path)
-        generate_tables()
-    end
-
-    # set order
-    i = abs(nu) + 1
-    global NUFHT_NU[]       = nu
-    global NUFHT_ASY_COEF[] = load(path * "asy_a_table.jld")["as"][Int64(2abs(nu) + 1), :]
-
-    # set tolerance
-    j = max(1, ceil(Int64, -log10(tol) - 3))
-    global NUFHT_TOL[] = tol
-
-    if isinteger(nu)
-        # set number of terms in asymptotic expansion based on loose experiments
-        # to balance effort of asymptotic and local expansions
-        k = isnothing(K_asy) ? min(10, floor(Int64, abs(nu)/5 + log10(1/tol)/4 + 1)) : K_asy
-        global NUFHT_ASY_K[] = k
-
-        global NUFHT_Z_SPLIT[] = isnothing(z_split) ? load(path * "asy_z_table.jld")["zs"][i, j, k] : z_split
-        global NUFHT_LOC_K[]   = isnothing(K_loc) ? load(path * "wimp_K_table.jld")["Ks"][i, j, k] : K_loc
-    else
+    if !isinteger(nu)
         # set number of Hankel expansion terms to give exact formula
-        global NUFHT_ASY_K[] = Int64(abs(nu) - 1/2)
-
-        # set unused constants to defaults
-        global NUFHT_Z_SPLIT[] = NaN
-        global NUFHT_LOC_K[]   = -1
+        K_asy = isnothing(K_asy) ? Int64(abs(nu) - 1/2) : K_asy
+        return nothing, K_asy, asy_coef, nothing
     end
+
+    # indices in remaining tables corresponding to order and tolerance
+    i = abs(nu) + 1
+    j = max(1, ceil(Int64, -log10(tol) - 3))
+    K_asy = isnothing(K_asy) ? get_K_asy(nu, Int(-log10(tol))) : K_asy
+
+    # read parameters from tables
+    K_loc   = isnothing(K_loc) ? K_LOC_TABLE[i, j] : K_loc
+    z_split = isnothing(z_split) ? Z_SPLIT_TABLE[i, j] : z_split
+
+    return K_loc, K_asy, asy_coef, z_split
 end
 
-function generate_boxes(rs, ws; 
-    z_split=NUFHT_Z_SPLIT[], max_levels=nothing, min_dim_prod=10_000)
+function generate_boxes(rs, ws, z_split, K_loc; 
+    max_levels=nothing, min_dim_prod=10_000)
     n, m = length(ws), length(rs)
     if isnothing(max_levels)
         max_levels = floor(Int64, log2(min(n, m)^2 / min_dim_prod))
@@ -229,7 +215,7 @@ function generate_boxes(rs, ws;
     for (box_set, new_box_set, criterion) in zip(
         [loc_boxes, asy_boxes], 
         [new_loc_boxes, new_asy_boxes], 
-        [(d1,d2)->(min(d1,d2) < NUFHT_LOC_K[]), (d1,d2)->(d1*d2 < min_dim_prod)]
+        [(d1,d2)->(min(d1,d2) < K_loc), (d1,d2)->(d1*d2 < min_dim_prod)]
         )
         for box in box_set
             d1, d2 = box[2]-box[1]+1, box[4]-box[3]+1
