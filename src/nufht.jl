@@ -40,25 +40,21 @@ function nufht!(gs, nu, rs, cs, ws;
         return gs
     end
 
-    @timeit TIMER "Generate boxes" begin
-        boxes = generate_boxes(
-            rs, ws, z_split, K_loc; 
-            max_levels=max_levels, min_dim_prod=min_dim_prod
-            )
-    end
+    boxes = generate_boxes(
+        rs, ws, z_split, K_loc; 
+        max_levels=max_levels, min_dim_prod=min_dim_prod
+        )
 
-    @timeit TIMER "Initialize buffers" begin
-        # initialize temporary buffers
-        in_buffer  = zeros(ComplexF64, m)
-        out_buffer = zeros(ComplexF64, n)
-        real_buffer_1 = zeros(Float64, n)
-        real_buffer_2 = zeros(Float64, n)
-        cheb_buffer     = zeros(Float64, K_loc+1)
-        bessel_buffer_1 = zeros(Float64, K_loc+1)
-        bessel_buffer_2 = zeros(
-            Float64, K_loc+1+div(abs(nu),2)+isodd(nu)
-            )
-    end
+    # initialize temporary buffers
+    in_buffer  = zeros(ComplexF64, m)
+    out_buffer = zeros(ComplexF64, n)
+    real_buffer_1 = zeros(Float64, n)
+    real_buffer_2 = zeros(Float64, n)
+    cheb_buffer     = zeros(Float64, K_loc+1)
+    bessel_buffer_1 = zeros(Float64, K_loc+1)
+    bessel_buffer_2 = zeros(
+        Float64, K_loc+1+div(abs(nu),2)+isodd(nu)
+        )
 
     # add contributions of all boxes
     for (box_set, add_box!) in zip(boxes, (
@@ -233,19 +229,17 @@ function generate_boxes(rs, ws, z_split, K_loc;
 end
 
 function split_box(rs, ws, box, z)
-    @timeit TIMER "Split box" begin
-        # number of equispaced arguments to check
-        num_check = 10
-        # find (i, j) with wi*r_j >= z, i in is, j in js 
-        # that maximizes heuristic splitting objective
-        i = argmax(
-            i -> splitting_objective(rs, ws, box, z, i), 
-            unique(round.(Int64, range(box[1], stop=box[2], length=num_check)))
-        )
-        j = findfirst(>(z / ws[i]), rs)
+    # number of equispaced arguments to check
+    num_check = 10
+    # find (i, j) with wi*r_j >= z, i in is, j in js 
+    # that maximizes heuristic splitting objective
+    i = argmax(
+        i -> splitting_objective(rs, ws, box, z, i), 
+        unique(round.(Int64, range(box[1], stop=box[2], length=num_check)))
+    )
+    j = findfirst(>(z / ws[i]), rs)
 
-        return i, j
-    end
+    return i, j
 end
 
 function splitting_objective(rs, ws, box, z, i)

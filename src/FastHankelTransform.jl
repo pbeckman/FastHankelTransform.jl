@@ -1,10 +1,8 @@
 module FastHankelTransform
-    using LinearAlgebra, FINUFFT, Printf, TimerOutputs
+    using LinearAlgebra, FINUFFT, Printf
     import Bessels: besselj, besselj!
 
     export nufht, nufht!
-
-    const TIMER = TimerOutput()
 
     const nu_max    = 200
     const nus_all   = 0:0.5:nu_max 
