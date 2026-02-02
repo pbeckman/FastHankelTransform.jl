@@ -1,5 +1,5 @@
-using FastHankelTransform, LinearAlgebra, Test
-import Bessels: besselj
+using FastHankelTransform, Test
+using FastHankelTransform.LinearAlgebra
 
 @testset "All tests" begin
     ws = collect(range(0, 189, 171))
@@ -9,7 +9,7 @@ import Bessels: besselj
     @testset "Integer ν accuracy" begin
         for tol in 10.0 .^ (-4:-1:-14)
             for nu in FastHankelTransform.nus_int
-                gs_true = besselj.(nu, ws .* rs') * cs
+                gs_true = FastHankelTransform.besselj.(nu, ws .* rs') * cs
                 gs      = nufht(nu, rs, cs, ws; tol=tol)
                 @test norm(gs_true - gs) / norm(gs_true) < 10*tol
             end

@@ -1,5 +1,9 @@
 
-function generate_tables(path)
+function generate_tables(path;
+                         nus_all=0:0.5:200.0,
+                         nus_int=0:200,
+                         nltols=4:15,
+                         max_K_asy=10)
     @printf("\n--------------------
 Generating tables
 --------------------\n")
