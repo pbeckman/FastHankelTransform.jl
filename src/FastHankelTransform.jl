@@ -4,13 +4,11 @@ module FastHankelTransform
 
     export nufht, nufht!
 
-    #=
     const nu_max    = 200
     const nus_all   = 0:0.5:nu_max 
     const nus_int   = 0:nu_max
     const nltols    = 4:15 # negative log tolerances
     const max_K_asy = 10
-    =#
 
     include("bounds.jl")
    
