@@ -1,0 +1,200 @@
+Editor and Reviewer comments:
+
+
+
+AE: Both referees appreciate the idea presented in this paper However the
+theoretical development to support this algorithm seems to have been
+accomplished only in a special case, namely of the torus. I agree with
+reviewer#2 that the paper would be significantly more valuable if rank bounds
+are obtained for more general manifolds. Otherwise a more applied journal seem
+more appropriate venue for this manuscript.
+
+
+Reviewer #1: Review for ``A Butterfly-Accelerated Manifold Harmonic Transform''
+by Beckman, Potter, and O'Neil.
+
+This paper considers the problem of rapidly computing the discrete manifold
+harmonic transform (MHT) $$ f(\boldsymbol{x}_j) = \sum_{k=1}^m c_k
+\varphi_k(\boldsymbol{x}_j), \quad \text{for } j = 1,\ldots,n, $$ where
+$\varphi_1,\ldots,\varphi_m$ are the eigenfunctions of the Laplace-Beltrami
+operator for some choice of boundary conditions (corresponding to eigenvalues $0
+\le \lambda_1 \le \cdots \le \lambda_m$), $c_1,\ldots,c_m$ are coefficients, and
+$\boldsymbol{x}_1,\ldots,\boldsymbol{x}_n$ are points on the manifold. The paper
+introduces a fast algorithm for computing the MHT called the
+Butterfly-Accelerated Manifold Harmonic Transform (BF-MHT) and provides some
+theoretical and empirical evidence that the method is effective.
+
+This paper contributes to the literature on fast harmonic transforms by
+presenting a novel computational and theoretical framework for developing and
+analyzing general fast manifold harmonic transforms. The paper introduces a
+butterfly algorithm based on Fiedler trees that is widely applicable. The paper
+provides some theoretical results about this algorithm in the special case in
+which the manifold is the flat torus $[-\pi,\pi]^2$, and provides empirical
+evidence of the general effectiveness of the algorithm. By taking an approach
+based on Fiedler trees, the paper is able to treat questions of how to
+discretize a manifold and compute the eigenfunctions as independent questions,
+enabling progress on the question of fast algorithm development. There are
+several technical issues and missing details that should be addressed, but the
+key ideas in the theoretical and computational results are sound.
+
+I recommend a minor revision.
+
+I have listed two main comments and several minor comments below.
+
+
+Main Comments:
+
+1) The presentation and statement of Lemma 7 require some clarification. This
+result provides a connection between the analytic and numerical results, and
+raises questions for further investigation. The following points could use
+clarification:
+
+1a) In Equation (5.13) the authors provide a heuristic argument based on the
+Jacobi-Anger expansion that explains why ``one cannot generally hope to obtain
+an expansion of $K$ with $\varepsilon$-rank less than $bR$ which is valid for
+$\boldsymbol{\omega}$ in any domain containing the circle of radius $b$.''
+However, in the paragraph before Lemma 7 it is stated that in the pre-asymptotic
+regime ``we observe empirically that the $\varepsilon$-rank of the
+annulus-to-disk Fourier kernel $K : A_a^b \to B_R$ grows roughly like
+$(bR)^{2/3}$ rather than like $b R$''. It would be helpful to directly address
+these seemingly conflicting statements. Replacing the heuristic argument with a
+precise lower bound could help clarify this situation.
+
+1b) The statement of Lemma 7 says ``Choose $C_1$ and $C_2$ such that...'' which
+seems to imply that these constants are chosen together and may depend on one
+another. However, if we are allowed to choose $C_2$ in terms of $C_1$, then the
+condition in Equation (5.34) does not seem to strengthen the condition in
+Equation (5.23) in Theorem 5. I may be misunderstanding something so
+clarification would be helpful. In particular, clarify all constant dependencies
+and explain what makes the result an improvement instead of a finite range
+special case.
+
+2) Many of the proofs in the paper are incomplete or lack details. In each case,
+the critical scaling is derived, so I think the results are all plausibly
+correct, up to constants, but many results are not established as written. For
+example, in some of the numerical rank bounds the coefficients in an infinite
+series are estimated, but the tail of the series is not formally bounded. I have
+detailed many instances of technical gaps in the proofs in the minor comments
+below, but the authors should also carefully check all proofs for completeness.
+
+
+Minor Comments:
+
+[Page 1 Eq. (1.1)] The notation for the index set of the sum is informal. Write
+$\sum_{\boldsymbol{k} \in K}$ and then define the index set $K$ precisely (the
+authors could consider making a simplifying assumption such as $m = 4 q^2$ if
+desired).
+
+[Page 2 line 1] Say ``Riemannian $d$-manifold'' if a Riemannian structure is
+assumed.
+
+[Page 3 line 7] You briefly mention the fast adjoint transform which maps
+function values to expansion coefficients. Does the approach presented in the
+paper also immediately provide a fast algorithm for the adjoint of the MHT? If
+so, consider adding a remark about this. Even though this is an adjoint and not
+an inverse, it could still be useful for estimating coefficients in combination
+with least squares or appropriate quadrature weights.
+
+[Pages 3--8] The background material on the butterfly factorization, Fiedler
+trees, and streaming butterfly factorization is well written, but long. The
+authors could consider moving some of this material to later in the paper.
+
+[Page 9 Lemma 1] The phrase ``For any $\xi > 0$.'' seems misplaced, e.g., write
+``Then, for any $\xi > 0$, we have''
+
+
+[Page 9 Theorem 2] Writing $e^{i \rho r \cos(\alpha-\theta)} = e^{i \rho r
+\cos(\alpha) \cos(\theta)} e^{i \rho r \sin(\alpha) \sin(\theta)}$ and expanding
+the exponentials in Taylor series and using tail bounds on the series is an easy
+way to see that $r_\varepsilon = \mathcal{O}((b R +
+\log(\varepsilon^{-1}))^2)$. It might be worth mentioning this to motivate the
+result since the proof is technical and involves identities with which the
+reader may be less familiar.
+
+[Page 10 line 10] The proof ends by counting integer pairs $(k,\ell)$
+corresponding to terms satisfying a bound. It remains show that the sum of the
+omitted terms is less than $\varepsilon$ to complete the proof.
+
+
+[Page 10 after Eq. (5.13)] The statement ``As $|J_k(b R)|$ is $\mathcal{O}(1)$
+for $k < b R$'' just says that $|J_k(b R)|$ is upper bounded and does not
+justify a lower bound on the $\varepsilon$-rank. Clarify this argument.
+
+[Page 11 line 18] It would be helpful to write out the equation for $c_{k
+\ell}(r)$ at the start of the proof for the convenience of the reader.
+
+[Page 11 last line] Why is neglecting the second term in the numerator
+justified? This term is positive and seems like it could be large. Also, write
+out the details for truncating the sum over $\ell$ to complete this
+proof. (Currently the proof seems to end before the result is established. The
+tail of the series should be bounded).
+
+[Page 12 Eq. (5.25)] Why do you use the expansion from Lemma 3 here? It seems
+more natural to first truncate the sum using Lemma 1. I do not follow the
+argument as written.
+
+[Page 12 line 16] ``counting the number of pairs $(k,\ell)$ for which
+$|c_{k,\ell}(r)|$ may exceed $\varepsilon$ gives the result''. This does not
+seem to establish the result as it remains to bound the sum of the omitted
+terms.
+
+[Page 13 line 5 from the bottom] Writing $\ell = \mathcal{O}(L/3)$ is imprecise,
+since the big-$\mathcal{O}$ has an implied constant. You could say the estimates
+balance at $\ell = L/3$ or find another notation.
+
+[Page 14 Section 6] The authors should consider making their code publicly
+available, e.g., by posting the code on GitHub, to improve the reproducibility
+of the numerical experiments.
+
+[Page 14--15] When referencing Figure 7, it would help to specify which plot you
+are referring to, e.g., in Figure 7 (left)...
+
+[Page 15 Figure 7 (right)] The figure legend references Thm. 5.5, but the
+theorem numberings in the paper do not include the section numbers.
+
+
+
+
+
+
+Reviewer #2: The paper presents a nice algorithm for fast matvec products
+between eigenfunctions of Laplacian eigenfunctions on manifolds and coefficient
+vectors. To the best of my knowledge, it is novel and the numerical experiments
+suggest it is valuable. However, the theoretical results currently do not
+motivate the algorithm's efficiency in the general case. The theoretical results
+focus on the case of the torus, in which case the matvec products become just a
+DFT. This is understandable, because as the authors mention, deriving rank
+bounds in the case of general manifolds is difficult. The consequence of the
+absence of rank bounds is however that the algorithm is more empirically
+motivated than theoretically grounded, and it is my opinion that some stronger
+theoretical results would be needed to be a good fit for ACHA.
+
+The numerical experiments show the usefulness of the proposed algorithm for a
+number of different applications. These are valuable and interesting to see, but
+some more details of the experiments could be added to strengthen the
+experimental side, which would be especially important in light of the comments
+about the theory above. The authors mention that storage cost is a proxy for the
+computational cost of applying the matvec products and therefore do not show any
+timings. This is true, but it would nonetheless be valuable to a reader to see
+the actual timings (compared to dense matvec products) to know how practical the
+algorithms currently are, and if there is some room for improvement. In the case
+of the torus, mentioning the timing of a DFT on the used hardware would also
+give a good sense of the relative speeds. Moreover, showing the timing of the
+precomputation step (including precomputing the eigenfunctions, and the quad
+tree using the Fiedler tree construction) would be valuable. It would then be
+valuable to know which hardware the algorithm was run on.
+
+Some minor comments:
+
+It could be worth mentioning that the result of Theorem 2 (but with maybe
+slightly different constants) follows from taking the outer product of the 1D
+rank expansion with itself in e.g., Lemma 2.2 in https://arxiv.org/pdf/0801.1524
+
+In (5.26), could the authors clarify why | c_{k\el} | \leq J_k?
+
+Lemma 7: should m \leq C_1^2/\pi be m \leq C_1^2*\pi?
+
+It is not clear to me why the two sides of equation (5.30) are exactly equal and
+a clarification would be welcome.
+
+Section 7.2 does not mention the absolute storage costs
